@@ -1,5 +1,15 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CdkDragDrop, moveItemInArray, transferArrayBetween Arrays } from '@angular/cdk/drag-drop';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  TemplateRef,
+} from '@angular/core';
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  transferArrayItem,
+} from '@angular/cdk/drag-drop';
 
 export interface KanbanColumn {
   id: string;
@@ -19,44 +29,49 @@ export interface KanbanCardMoveEvent {
 @Component({
   selector: 'app-kanban-board',
   templateUrl: './kanban-board.component.html',
-  styleUrls: ['./kanban-board.component.css']
+  styleUrls: ['./kanban-board.component.scss'],
 })
 export class KanbanBoardComponent {
+  /** Colunas do Kanban */
   @Input() columns: KanbanColumn[] = [];
-  @Input() cardTemplate: any; // Template reference for card content
+
+  /** Template do cartão (opcional) */
+  @Input() cardTemplate?: TemplateRef<any>;
+
+  /** Eventos */
   @Output() cardMoved = new EventEmitter<KanbanCardMoveEvent>();
   @Output() cardClicked = new EventEmitter<any>();
 
+  /** Conectividade entre as listas (ids dos cdkDropList) */
+  getConnectedLists(): string[] {
+    return this.columns.map((c) => c.id);
+  }
+
+  onCardClick(item: any): void {
+    this.cardClicked.emit(item);
+  }
+
   drop(event: CdkDragDrop<any[]>, columnId: string, previousColumnId: string) {
+    // Move dentro da mesma coluna
     if (event.previousContainer === event.container) {
-      // Moved within same column
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      // Moved to different column
-      transferArrayBetweenArrays(
+      // Move entre colunas diferentes
+      transferArrayItem(
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
         event.currentIndex
       );
-
-      // Emit event
-      const item = event.container.data[event.currentIndex];
-      this.cardMoved.emit({
-        item,
-        previousColumnId,
-        currentColumnId: columnId,
-        previousIndex: event.previousIndex,
-        currentIndex: event.currentIndex
-      });
     }
-  }
 
-  onCardClick(item: any) {
-    this.cardClicked.emit(item);
-  }
-
-  getConnectedLists(): string[] {
-    return this.columns.map(col => col.id);
+    const movedItem = event.container.data[event.currentIndex];
+    this.cardMoved.emit({
+      item: movedItem,
+      previousColumnId,
+      currentColumnId: columnId,
+      previousIndex: event.previousIndex,
+      currentIndex: event.currentIndex,
+    });
   }
 }

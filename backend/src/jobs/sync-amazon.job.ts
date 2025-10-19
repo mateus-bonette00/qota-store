@@ -1,18 +1,16 @@
 import cron from 'node-cron';
-import { amazonSPAPIService } from '../services/amazon-spapi.service';
 import { receitasService } from '../services/receitas.service';
 import { produtosService } from '../services/produtos.service';
 import { query } from '../config/database';
+import { amazonService } from '../services/amazon-spapi.service';
 
 export class AmazonSyncJob {
   private isRunning = false;
 
   /**
-   * Sincronizar vendas da Amazon
-   * Roda a cada 4 horas
+   * Inicia o agendamento (a cada 4 horas)
    */
-  start() {
-    // A cada 4 horas
+  start(): void {
     cron.schedule('0 */4 * * *', async () => {
       if (this.isRunning) {
         console.log('[Amazon Sync] Job já está rodando, pulando...');
@@ -37,42 +35,55 @@ export class AmazonSyncJob {
   }
 
   /**
-   * Sincronizar ordens/vendas
+   * Sincronizar ordens/vendas (últimos 7 dias por padrão)
    */
-  private async syncOrders() {
+  private async syncOrders(days = 7): Promise<{ novos: number; atualizados: number }> {
     try {
-      const orders = await amazonSPAPIService.getRecentOrders(7); // Últimos 7 dias
+      const orders = await amazonService.getRecentOrders(days);
       let novos = 0;
       let atualizados = 0;
 
       for (const order of orders) {
-        // Buscar itens da ordem
-        const items = await amazonSPAPIService.getOrderItems(order.orderId);
+        const orderId: string = order.AmazonOrderId || order.orderId;
+        const purchaseDateISO: string = order.PurchaseDate || order.purchaseDate;
+        const purchaseDate = purchaseDateISO ? String(purchaseDateISO).split('T')[0] : null;
+
+        if (!orderId || !purchaseDate) {
+          // pular pedidos sem dados essenciais
+          continue;
+        }
+
+        const items = await amazonService.getOrderItems(orderId);
 
         for (const item of items) {
-          // Buscar produto por SKU
-          const produto = await produtosService.findBySKU(item.sku);
+          const sku: string | null = item.SellerSKU ?? item.sku ?? null;
+          const asin: string | null = item.ASIN ?? item.asin ?? null;
+          const quantity: number = Number(item.QuantityOrdered ?? item.quantityOrdered ?? 0);
+          const unitUsd: number = Number(item.ItemPrice?.Amount ?? item.itemPrice?.amount ?? 0);
 
-          // Verificar se já existe receita para este item
+          // localizar produto pelo SKU (se houver)
+          const produto = sku ? await produtosService.findBySKU(sku) : null;
+
+          // já existe receita igual para a mesma data?
           const existing = await query(
             `SELECT id FROM receitas WHERE asin = $1 AND sku = $2 AND data = $3`,
-            [item.asin, item.sku, order.purchaseDate.split('T')[0]]
+            [asin, sku, purchaseDate]
           );
 
           if (existing.rows.length === 0) {
-            // Criar nova receita
+            // cria receita
             await receitasService.createFromAmazonOrder({
-              data: order.purchaseDate.split('T')[0],
-              sku: item.sku,
-              asin: item.asin,
-              quantidade: item.quantityOrdered,
-              valor_unitario: item.itemPrice ? parseFloat(item.itemPrice.amount) : 0,
-              produto_id: produto?.id
+              data: purchaseDate,
+              sku: sku ?? '',
+              asin: asin ?? '',
+              quantidade: quantity,
+              valor_unitario: unitUsd,
+              produto_id: produto?.id,
             });
 
-            // Reduzir estoque se produto encontrado
-            if (produto) {
-              await produtosService.reduzirEstoque(produto.id!, item.quantityOrdered);
+            // reduz estoque, se houver produto
+            if (produto && quantity > 0) {
+              await produtosService.reduzirEstoque(produto.id!, quantity);
             }
 
             novos++;
@@ -84,7 +95,6 @@ export class AmazonSyncJob {
 
       await this.logSync('orders', 'success', novos, atualizados);
       console.log(`[Amazon Sync] Ordens sincronizadas: ${novos} novas, ${atualizados} existentes`);
-
       return { novos, atualizados };
     } catch (error) {
       console.error('[Amazon Sync] Erro ao sincronizar ordens:', error);
@@ -93,13 +103,12 @@ export class AmazonSyncJob {
   }
 
   /**
-   * Sincronizar saldo
+   * Sincronizar/registrar saldo do dia
    */
-  private async syncBalance() {
+  private async syncBalance(): Promise<void> {
     try {
-      const balance = await amazonSPAPIService.getAccountBalance();
+      const balance = await amazonService.getAccountBalance();
 
-      // Verificar se já existe saldo para hoje
       const hoje = new Date().toISOString().split('T')[0];
       const existing = await query(
         'SELECT id FROM amazon_saldos WHERE data = $1',
@@ -107,14 +116,21 @@ export class AmazonSyncJob {
       );
 
       if (existing.rows.length === 0) {
-        // Inserir novo saldo
         await query(
           `INSERT INTO amazon_saldos (data, disponivel, pendente, moeda)
            VALUES ($1, $2, $3, $4)`,
           [hoje, balance.disponivel, balance.pendente, balance.moeda]
         );
 
-        console.log(`[Amazon Sync] Saldo sincronizado: $${balance.disponivel}`);
+        console.log(`[Amazon Sync] Saldo sincronizado: ${balance.disponivel} ${balance.moeda}`);
+      } else {
+        // Se preferir atualizar o saldo do dia, descomente:
+        // await query(
+        //   `UPDATE amazon_saldos
+        //       SET disponivel = $2, pendente = $3, moeda = $4
+        //     WHERE id = $1`,
+        //   [existing.rows[0].id, balance.disponivel, balance.pendente, balance.moeda]
+        // );
       }
 
       await this.logSync('balance', 'success', 1, 0);
@@ -133,18 +149,18 @@ export class AmazonSyncJob {
     novos: number,
     atualizados: number,
     erro?: string
-  ) {
+  ): Promise<void> {
     await query(
       `INSERT INTO amazon_sync_log (tipo, status, registros_novos, registros_atualizados, erro)
        VALUES ($1, $2, $3, $4, $5)`,
-      [tipo, status, novos, atualizados, erro || null]
+      [tipo, status, novos, atualizados, erro ?? null]
     );
   }
 
   /**
-   * Executar sync manualmente
+   * Executa manualmente (sem esperar o cron)
    */
-  async runManually() {
+  async runManually(): Promise<{ success: true }> {
     if (this.isRunning) {
       throw new Error('Sincronização já está em andamento');
     }

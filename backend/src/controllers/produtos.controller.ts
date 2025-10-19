@@ -1,188 +1,237 @@
 import { Request, Response } from 'express';
 import { produtosService } from '../services/produtos.service';
-import { ProdutoStatus } from '../models/produto.model';
+import { ProdutoStatus } from '../models/produto.model'; // ProdutoStatus é um *type* ('ATIVO' | 'INATIVO')
 
 export class ProdutosController {
-  /**
-   * GET /api/produtos
-   */
-  async list(req: Request, res: Response) {
+  // GET /produtos
+  async list(req: Request, res: Response): Promise<void> {
     try {
-      const filters = {
-        status: req.query.status as ProdutoStatus,
-        categoria: req.query.categoria as string,
-        sku: req.query.sku as string,
-        asin: req.query.asin as string,
-        fornecedor: req.query.fornecedor as string
-      };
+      // O service NÃO aceita "q"; envie apenas o que ele conhece.
+      const { status, categoria, sku, asin, ativo } = req.query;
 
-      const produtos = await produtosService.list(filters);
-      res.json(produtos);
-    } catch (error) {
-      console.error('Erro ao listar produtos:', error);
+      // Mapear ativo:boolean-like -> ProdutoStatus (type)
+      const statusFromAtivo: ProdutoStatus | undefined =
+        ativo !== undefined
+          ? (String(ativo) === 'true' ? ('ATIVO' as ProdutoStatus) : ('INATIVO' as ProdutoStatus))
+          : undefined;
+
+      const result = await produtosService.list({
+        // priorize 'status' explícito; senão, use o derivado de 'ativo'
+        status: (status as ProdutoStatus) ?? statusFromAtivo,
+        categoria: (categoria as string) || undefined,
+        sku: (sku as string) || undefined,
+        asin: (asin as string) || undefined,
+      });
+
+      res.status(200).json(result);
+      return;
+    } catch (err) {
+      console.error('[produtos.list]', err);
       res.status(500).json({ error: 'Erro ao listar produtos' });
+      return;
     }
   }
 
-  /**
-   * GET /api/produtos/:id
-   */
-  async findById(req: Request, res: Response) {
+  // POST /produtos
+  async create(req: Request, res: Response): Promise<void> {
     try {
-      const id = Number(req.params.id);
-      const withMetrics = req.query.metrics === 'true';
-      const produto = await produtosService.findById(id, withMetrics);
-
-      if (!produto) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
-      }
-
-      res.json(produto);
-    } catch (error) {
-      console.error('Erro ao buscar produto:', error);
-      res.status(500).json({ error: 'Erro ao buscar produto' });
-    }
-  }
-
-  /**
-   * POST /api/produtos
-   */
-  async create(req: Request, res: Response) {
-    try {
-      const produto = await produtosService.create(req.body);
-      res.status(201).json(produto);
-    } catch (error) {
-      console.error('Erro ao criar produto:', error);
+      const created = await produtosService.create(req.body);
+      res.status(201).json(created);
+      return;
+    } catch (err) {
+      console.error('[produtos.create]', err);
       res.status(500).json({ error: 'Erro ao criar produto' });
+      return;
     }
   }
 
-  /**
-   * PUT /api/produtos/:id
-   */
-  async update(req: Request, res: Response) {
+  // GET /produtos/:id
+  async findById(req: Request, res: Response): Promise<void> {
     try {
       const id = Number(req.params.id);
-      const produto = await produtosService.update(id, req.body);
-
-      if (!produto) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
+      if (!Number.isFinite(id)) {
+        res.status(400).json({ error: 'id inválido' });
+        return;
       }
 
-      res.json(produto);
-    } catch (error) {
-      console.error('Erro ao atualizar produto:', error);
-      res.status(500).json({ error: 'Erro ao atualizar produto' });
+      const produto = await produtosService.findById(id);
+      if (!produto) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
+      }
+
+      res.status(200).json(produto);
+      return;
+    } catch (err) {
+      console.error('[produtos.findById]', err);
+      res.status(500).json({ error: 'Erro interno ao buscar produto' });
+      return;
     }
   }
 
-  /**
-   * PATCH /api/produtos/:id/status
-   */
-  async updateStatus(req: Request, res: Response) {
+  // PUT /produtos/:id
+  async update(req: Request, res: Response): Promise<void> {
     try {
       const id = Number(req.params.id);
-      const { status } = req.body;
-
-      if (!status) {
-        return res.status(400).json({ error: 'Status é obrigatório' });
+      if (!Number.isFinite(id)) {
+        res.status(400).json({ error: 'id inválido' });
+        return;
       }
 
-      const produto = await produtosService.updateStatus(id, status);
-
-      if (!produto) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
+      const updated = await produtosService.update(id, req.body);
+      if (!updated) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
       }
 
-      res.json(produto);
-    } catch (error) {
-      console.error('Erro ao atualizar status do produto:', error);
+      res.status(200).json(updated);
+      return;
+    } catch (err) {
+      console.error('[produtos.update]', err);
+      res.status(500).json({ error: 'Erro interno ao atualizar produto' });
+      return;
+    }
+  }
+
+  // PATCH /produtos/:id/status
+  async updateStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) {
+        res.status(400).json({ error: 'id inválido' });
+        return;
+      }
+
+      const { ativo } = req.body as { ativo?: boolean };
+      if (typeof ativo !== 'boolean') {
+        res.status(400).json({ error: 'Campo "ativo" é obrigatório e deve ser boolean' });
+        return;
+      }
+
+      // ProdutoStatus é *type*; use strings com assertion
+      const novoStatus: ProdutoStatus = (ativo ? 'ATIVO' : 'INATIVO') as ProdutoStatus;
+
+      const updated = await produtosService.updateStatus(id, novoStatus);
+      if (!updated) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
+      }
+
+      res.status(200).json(updated);
+      return;
+    } catch (err) {
+      console.error('[produtos.updateStatus]', err);
       res.status(500).json({ error: 'Erro ao atualizar status do produto' });
+      return;
     }
   }
 
-  /**
-   * DELETE /api/produtos/:id
-   */
-  async delete(req: Request, res: Response) {
+  // DELETE /produtos/:id
+  async delete(req: Request, res: Response): Promise<void> {
     try {
       const id = Number(req.params.id);
-      const success = await produtosService.delete(id);
+      if (!Number.isFinite(id)) {
+        res.status(400).json({ error: 'id inválido' });
+        return;
+      }
 
-      if (!success) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
+      const removed = await produtosService.delete(id);
+      if (!removed) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
       }
 
       res.status(204).send();
-    } catch (error) {
-      console.error('Erro ao deletar produto:', error);
-      res.status(500).json({ error: 'Erro ao deletar produto' });
+      return;
+    } catch (err) {
+      console.error('[produtos.delete]', err);
+      res.status(500).json({ error: 'Erro ao remover produto' });
+      return;
     }
   }
 
-  /**
-   * GET /api/produtos/kanban
-   */
-  async getKanbanData(req: Request, res: Response) {
+  // GET /produtos/sku/:sku
+  async findBySKU(req: Request, res: Response): Promise<void> {
     try {
-      const kanbanData = await produtosService.getKanbanData();
-      res.json(kanbanData);
-    } catch (error) {
-      console.error('Erro ao obter dados do Kanban:', error);
-      res.status(500).json({ error: 'Erro ao obter dados do Kanban' });
-    }
-  }
+      const { sku } = req.params;
+      if (!sku) {
+        res.status(400).json({ error: 'sku é obrigatório' });
+        return;
+      }
 
-  /**
-   * GET /api/produtos/dashboard
-   */
-  async getDashboard(req: Request, res: Response) {
-    try {
-      const dashboard = await produtosService.getDashboard();
-      res.json(dashboard);
-    } catch (error) {
-      console.error('Erro ao obter dashboard de produtos:', error);
-      res.status(500).json({ error: 'Erro ao obter dashboard de produtos' });
-    }
-  }
-
-  /**
-   * GET /api/produtos/sku/:sku
-   */
-  async findBySKU(req: Request, res: Response) {
-    try {
-      const sku = req.params.sku;
       const produto = await produtosService.findBySKU(sku);
-
       if (!produto) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
       }
 
-      res.json(produto);
-    } catch (error) {
-      console.error('Erro ao buscar produto por SKU:', error);
-      res.status(500).json({ error: 'Erro ao buscar produto por SKU' });
+      res.status(200).json(produto);
+      return;
+    } catch (err) {
+      console.error('[produtos.findBySKU]', err);
+      res.status(500).json({ error: 'Erro ao buscar por SKU' });
+      return;
     }
   }
 
-  /**
-   * GET /api/produtos/asin/:asin
-   */
-  async findByASIN(req: Request, res: Response) {
+  // GET /produtos/asin/:asin
+  async findByASIN(req: Request, res: Response): Promise<void> {
     try {
-      const asin = req.params.asin;
-      const produto = await produtosService.findByASIN(asin);
-
-      if (!produto) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
+      const { asin } = req.params;
+      if (!asin) {
+        res.status(400).json({ error: 'asin é obrigatório' });
+        return;
       }
 
-      res.json(produto);
-    } catch (error) {
-      console.error('Erro ao buscar produto por ASIN:', error);
-      res.status(500).json({ error: 'Erro ao buscar produto por ASIN' });
+      const produto = await produtosService.findByASIN(asin);
+      if (!produto) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
+      }
+
+      res.status(200).json(produto);
+      return;
+    } catch (err) {
+      console.error('[produtos.findByASIN]', err);
+      res.status(500).json({ error: 'Erro ao buscar por ASIN' });
+      return;
     }
   }
+
+  // GET /produtos/kanban
+  async getKanbanData(req: Request, res: Response): Promise<void> {
+    try {
+      const { categoria } = req.query;
+      const data = await produtosService.getKanbanData({
+        categoria: (categoria as string) || undefined,
+      });
+      res.status(200).json(data);
+      return;
+    } catch (err) {
+      console.error('[produtos.getKanbanData]', err);
+      res.status(500).json({ error: 'Erro ao carregar dados do Kanban' });
+      return;
+    }
+  }
+
+  // GET /produtos/dashboard
+  async getDashboard(req: Request, res: Response): Promise<void> {
+    try {
+      const { mes, from, to } = req.query as {
+        mes?: string; from?: string; to?: string;
+      };
+
+      const data = await produtosService.getDashboard({ mes, from, to });
+      res.status(200).json(data);
+      return;
+    } catch (err) {
+      console.error('[produtos.getDashboard]', err);
+      res.status(500).json({ error: 'Erro ao carregar dados do dashboard' });
+      return;
+    }
+  }
+
+
 }
 
 export const produtosController = new ProdutosController();

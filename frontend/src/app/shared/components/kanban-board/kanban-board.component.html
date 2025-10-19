@@ -1,6 +1,10 @@
 <div class="kanban-board">
   <div class="kanban-columns">
-    <div *ngFor="let column of columns" class="kanban-column" [style.border-color]="column.color">
+    <div
+      *ngFor="let column of columns"
+      class="kanban-column"
+      [style.border-color]="column.color"
+    >
       <div class="column-header" [style.background-color]="column.color">
         <h3>{{ column.title }}</h3>
         <span class="item-count">{{ column.items.length }}</span>
@@ -14,25 +18,22 @@
         (cdkDropListDropped)="drop($event, column.id, column.id)"
         class="column-content"
       >
-        <div
-          *ngFor="let item of column.items"
-          cdkDrag
-          class="kanban-card"
-          (click)="onCardClick(item)"
-        >
-          <!-- Use ng-template for custom card content -->
-          <ng-container *ngIf="cardTemplate">
-            <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: item }"></ng-container>
+        <div *ngFor="let item of column.items" cdkDrag class="kanban-card" (click)="onCardClick(item)">
+          <!-- Usa template externo, se fornecido -->
+          <ng-container *ngIf="cardTemplate; else defaultCard"
+                        [ngTemplateOutlet]="cardTemplate"
+                        [ngTemplateOutletContext]="{ $implicit: item }">
           </ng-container>
 
-          <!-- Default card content if no template provided -->
-          <div *ngIf="!cardTemplate" class="default-card">
-            <p>{{ item.nome || item.title || 'Item' }}</p>
-          </div>
-
-          <!-- Drag placeholder -->
-          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+          <!-- Template padrão -->
+          <ng-template #defaultCard>
+            <div class="default-card">
+              {{ item?.nome || item?.title || 'Item' }}
+            </div>
+          </ng-template>
         </div>
+
+        <div class="drag-placeholder" cdkDropListPlaceholder></div>
       </div>
     </div>
   </div>

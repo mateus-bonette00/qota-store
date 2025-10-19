@@ -11,6 +11,16 @@ import {
 } from '../models/produto.model';
 import { currencyService } from './currency.service';
 
+export interface KanbanParams {
+  categoria?: string;
+}
+
+export interface DashboardParams {
+  mes?: string;   // 'YYYY-MM'
+  from?: string;  // 'YYYY-MM-DD'
+  to?: string;    // 'YYYY-MM-DD'
+}
+
 export class ProdutosService {
   /**
    * Listar todos os produtos com filtros
@@ -58,7 +68,7 @@ export class ProdutosService {
   }
 
   /**
-   * Buscar produto por ID com métricas
+   * Buscar produto por ID com mÃ©tricas
    */
   async findById(id: number, withMetrics = false): Promise<Produto | ProdutoWithMetrics | null> {
     if (!withMetrics) {
@@ -66,32 +76,35 @@ export class ProdutosService {
       return result.rows.length > 0 ? result.rows[0] : null;
     }
 
+    // view com margem/valores calculados
     const result = await query('SELECT * FROM v_produtos_margem WHERE id = $1', [id]);
     if (result.rows.length === 0) return null;
 
     const produto = result.rows[0];
 
-    // Buscar métricas de vendas
+    // MÃ©tricas de vendas do produto
     const vendasResult = await query(
       `SELECT
-        COALESCE(SUM(quantidade), 0) as quantidade_vendida,
-        COALESCE(SUM(valor_usd), 0) as receita_total_usd,
-        COALESCE(SUM(lucro * (valor_usd / NULLIF(valor, 0))), 0) as lucro_total_usd
-      FROM receitas WHERE produto_id = $1`,
+         COALESCE(SUM(quantidade), 0)                             AS quantidade_vendida,
+         COALESCE(SUM(valor_usd), 0)                              AS receita_total_usd,
+         COALESCE(SUM(lucro * (valor_usd / NULLIF(valor, 0))), 0) AS lucro_total_usd
+       FROM receitas
+       WHERE produto_id = $1`,
       [id]
     );
-
     const vendas = vendasResult.rows[0];
 
     // Converter valor do estoque
     const custo_total = Number(produto.custo_total);
+    const valor_estoque_base = custo_total * produto.estoque;
+
     const valor_estoque_usd = await currencyService.convert(
-      custo_total * produto.estoque,
+      valor_estoque_base,
       produto.moeda_compra,
       'USD'
     );
     const valor_estoque_brl = await currencyService.convert(
-      custo_total * produto.estoque,
+      valor_estoque_base,
       produto.moeda_compra,
       'BRL'
     );
@@ -119,7 +132,12 @@ export class ProdutosService {
         categoria, fornecedor, custo_base, freight, tax, prep,
         moeda_compra, valor_eur, sold_for, amazon_fees,
         link_amazon, link_fornecedor, data_amz
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14,
+        $15, $16, $17, $18,
+        $19, $20, $21
+      )
       RETURNING *`,
       [
         data.data_add,
@@ -137,7 +155,7 @@ export class ProdutosService {
         data.tax,
         data.prep,
         data.moeda_compra,
-        data.valor_eur || 0,
+        data.valor_eur ?? 0,
         data.sold_for,
         data.amazon_fees,
         data.link_amazon || null,
@@ -174,13 +192,13 @@ export class ProdutosService {
       }
     }
 
-    if (updates.length === 0) return existing;
+    if (updates.length === 0) return existing as Produto;
 
     params.push(id);
     const sql = `UPDATE produtos SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
 
     const result = await query(sql, params);
-    return result.rows[0];
+    return result.rows[0] ?? null;
   }
 
   /**
@@ -199,32 +217,43 @@ export class ProdutosService {
    */
   async delete(id: number): Promise<boolean> {
     const result = await query('DELETE FROM produtos WHERE id = $1 RETURNING id', [id]);
-    return result.rowCount > 0;
+    return (result?.rowCount ?? 0) > 0;
   }
 
   /**
    * Obter dados para Kanban Board
+   * Aceita filtro opcional por categoria.
    */
-  async getKanbanData(): Promise<ProdutoKanbanColumn[]> {
-    const statuses: ProdutoStatus[] = ['sourcing', 'comprado', 'em_transito', 'no_estoque', 'vendido'];
+  async getKanbanData(params?: KanbanParams): Promise<ProdutoKanbanColumn[]> {
+    // Se seu ProdutoStatus for union de strings, mantenha essa ordem.
+    const statuses: ProdutoStatus[] = [
+      'sourcing',
+      'comprado',
+      'em_transito',
+      'no_estoque',
+      'vendido'
+    ];
     const columns: ProdutoKanbanColumn[] = [];
 
     for (const status of statuses) {
-      const produtos = await this.list({ status });
+      const produtos = await this.list({
+        status,
+        categoria: params?.categoria
+      });
 
-      // Enriquecer com métricas
+      // Enriquecer com mÃ©tricas
       const produtosWithMetrics: ProdutoWithMetrics[] = [];
       let total_unidades = 0;
       let valor_total_usd = 0;
       let valor_total_brl = 0;
 
       for (const p of produtos) {
-        const produtoWithMetrics = await this.findById(p.id!, true) as ProdutoWithMetrics;
-        if (produtoWithMetrics) {
-          produtosWithMetrics.push(produtoWithMetrics);
-          total_unidades += produtoWithMetrics.estoque;
-          valor_total_usd += produtoWithMetrics.valor_estoque_usd;
-          valor_total_brl += produtoWithMetrics.valor_estoque_brl;
+        const pm = await this.findById(p.id!, true) as ProdutoWithMetrics | null;
+        if (pm) {
+          produtosWithMetrics.push(pm);
+          total_unidades += pm.estoque;
+          valor_total_usd += pm.valor_estoque_usd;
+          valor_total_brl += pm.valor_estoque_brl;
         }
       }
 
@@ -244,43 +273,91 @@ export class ProdutosService {
 
   /**
    * Obter dashboard de produtos
+   * Aceita filtros de perÃ­odo (created_at); ajuste se quiser usar outra coluna.
    */
-  async getDashboard(): Promise<ProdutoDashboard> {
-    // Total de produtos e estoque
-    const totaisResult = await query(`
-      SELECT
-        COUNT(*) as total_produtos,
-        COALESCE(SUM(estoque), 0) as total_estoque
-      FROM produtos
-    `);
-    const totais = totaisResult.rows[0];
+  async getDashboard(params?: DashboardParams): Promise<ProdutoDashboard> {
+    const whereParts: string[] = ['1=1'];
+    const args: any[] = [];
+    let i = 1;
+
+    // Filtros por perÃ­odo no created_at
+    if (params?.mes) {
+      whereParts.push(`TO_CHAR(created_at, 'YYYY-MM') = $${i++}`);
+      args.push(params.mes);
+    }
+    if (params?.from) {
+      whereParts.push(`created_at >= $${i++}`);
+      args.push(params.from);
+    }
+    if (params?.to) {
+      whereParts.push(`created_at <= $${i++}`);
+      args.push(params.to);
+    }
+
+    const where = whereParts.join(' AND ');
+
+    // Totais de produtos e estoque
+    const totaisResult = await query(
+      `SELECT
+         COUNT(*)::int AS total_produtos,
+         COALESCE(SUM(estoque), 0)::int AS total_estoque
+       FROM produtos
+       WHERE ${where}`,
+      args
+    );
+    const totais = totaisResult.rows[0] ?? { total_produtos: 0, total_estoque: 0 };
 
     // Produtos por status
-    const statusResult = await query(`
-      SELECT status, COUNT(*) as count
-      FROM produtos
-      GROUP BY status
-    `);
-    const produtos_por_status: any = {
-      sourcing: 0,
-      comprado: 0,
-      em_transito: 0,
-      no_estoque: 0,
-      vendido: 0
-    };
-    statusResult.rows.forEach(row => {
-      produtos_por_status[row.status] = Number(row.count);
-    });
+    const statusResult = await query(
+      `SELECT status, COUNT(*)::int AS count
+         FROM produtos
+        WHERE ${where}
+        GROUP BY status`,
+      args
+    );
 
-    // Valor total do estoque
-    const estoqueResult = await query(`
-      SELECT
-        moeda_compra,
-        SUM((custo_base + freight + tax + prep) * estoque) as valor_total
-      FROM produtos
-      WHERE status IN ('no_estoque', 'em_transito')
-      GROUP BY moeda_compra
-    `);
+    // Produtos por status (TIPO EXATO, com chaves fixas)
+const produtos_por_status: {
+  sourcing: number;
+  comprado: number;
+  em_transito: number;
+  no_estoque: number;
+  vendido: number;
+} = {
+  sourcing: 0,
+  comprado: 0,
+  em_transito: 0,
+  no_estoque: 0,
+  vendido: 0,
+};
+
+statusResult.rows.forEach((row: any) => {
+  // garanta que a chave Ã© uma das vÃ¡lidas do ProdutoStatus
+  switch (row.status as ProdutoStatus) {
+    case 'sourcing':
+    case 'comprado':
+    case 'em_transito':
+    case 'no_estoque':
+    case 'vendido':
+      produtos_por_status[row.status as keyof typeof produtos_por_status] = Number(row.count);
+      break;
+    default:
+      // status desconhecido: ignore ou trate aqui
+      break;
+  }
+});
+
+    // Valor total do estoque (apenas status que compÃµem estoque)
+    const estoqueResult = await query(
+      `SELECT
+         moeda_compra,
+         SUM((custo_base + freight + tax + prep) * estoque) AS valor_total
+       FROM produtos
+       WHERE ${where}
+         AND status IN ('no_estoque', 'em_transito')
+       GROUP BY moeda_compra`,
+      args
+    );
 
     let valor_total_estoque_usd = 0;
     let valor_total_estoque_brl = 0;
@@ -288,63 +365,82 @@ export class ProdutosService {
     for (const row of estoqueResult.rows) {
       const valor = Number(row.valor_total);
       const moeda = row.moeda_compra as 'USD' | 'BRL' | 'EUR';
-
       valor_total_estoque_usd += await currencyService.convert(valor, moeda, 'USD');
       valor_total_estoque_brl += await currencyService.convert(valor, moeda, 'BRL');
     }
 
-    // Margem média
-    const margemResult = await query(`
-      SELECT AVG(margem_percentual) as margem_media
-      FROM v_produtos_margem
-      WHERE sold_for > 0
-    `);
+    // Margem mÃ©dia (usa view v_produtos_margem)
+    const margemWhereParts: string[] = ['sold_for > 0'];
+    const margemArgs: any[] = [];
+    let j = 1;
+
+    if (params?.mes) {
+      margemWhereParts.push(`TO_CHAR(created_at, 'YYYY-MM') = $${j++}`);
+      margemArgs.push(params.mes);
+    }
+    if (params?.from) {
+      margemWhereParts.push(`created_at >= $${j++}`);
+      margemArgs.push(params.from);
+    }
+    if (params?.to) {
+      margemWhereParts.push(`created_at <= $${j++}`);
+      margemArgs.push(params.to);
+    }
+
+    const margemResult = await query(
+      `SELECT AVG(margem_percentual) AS margem_media
+         FROM v_produtos_margem
+        WHERE ${margemWhereParts.join(' AND ')}`,
+      margemArgs
+    );
     const margem_media = Number(margemResult.rows[0]?.margem_media) || 0;
 
     // Top produtos vendidos
-    const topVendidosResult = await query(`
-      SELECT
-        p.id,
-        SUM(r.quantidade) as total_vendido
-      FROM produtos p
-      JOIN receitas r ON r.produto_id = p.id
-      GROUP BY p.id
-      ORDER BY total_vendido DESC
-      LIMIT 10
-    `);
+    const topVendidosResult = await query(
+      `SELECT
+         p.id,
+         SUM(r.quantidade)::int AS total_vendido
+       FROM produtos p
+       JOIN receitas r ON r.produto_id = p.id
+       GROUP BY p.id
+       ORDER BY total_vendido DESC
+       LIMIT 10`
+    );
 
     const top_produtos_vendidos: ProdutoWithMetrics[] = [];
     for (const row of topVendidosResult.rows) {
-      const produto = await this.findById(row.id, true) as ProdutoWithMetrics;
+      const produto = await this.findById(row.id, true) as ProdutoWithMetrics | null;
       if (produto) top_produtos_vendidos.push(produto);
     }
 
     // Top produtos por margem
-    const topMargemResult = await query(`
-      SELECT id
-      FROM v_produtos_margem
-      WHERE sold_for > 0
-      ORDER BY margem_percentual DESC
-      LIMIT 10
-    `);
+    const topMargemResult = await query(
+      `SELECT id
+         FROM v_produtos_margem
+        WHERE sold_for > 0
+        ORDER BY margem_percentual DESC
+        LIMIT 10`
+    );
 
     const top_produtos_margem: ProdutoWithMetrics[] = [];
     for (const row of topMargemResult.rows) {
-      const produto = await this.findById(row.id, true) as ProdutoWithMetrics;
+      const produto = await this.findById(row.id, true) as ProdutoWithMetrics | null;
       if (produto) top_produtos_margem.push(produto);
     }
 
-    // Alertas de estoque baixo (configurável, padrão 10)
-    const alertasResult = await query(`
-      SELECT id
-      FROM produtos
-      WHERE estoque > 0 AND estoque <= 10 AND status = 'no_estoque'
-      ORDER BY estoque ASC
-    `);
+    // Alertas de estoque baixo (<= 10) nos itens em estoque
+    const alertasResult = await query(
+      `SELECT id
+         FROM produtos
+        WHERE estoque > 0
+          AND estoque <= 10
+          AND status = 'no_estoque'
+        ORDER BY estoque ASC`
+    );
 
     const alertas_estoque_baixo: ProdutoWithMetrics[] = [];
     for (const row of alertasResult.rows) {
-      const produto = await this.findById(row.id, true) as ProdutoWithMetrics;
+      const produto = await this.findById(row.id, true) as ProdutoWithMetrics | null;
       if (produto) alertas_estoque_baixo.push(produto);
     }
 
@@ -378,14 +474,14 @@ export class ProdutosService {
   }
 
   /**
-   * Reduzir estoque após venda
+   * Reduzir estoque apÃ³s venda
    */
   async reduzirEstoque(id: number, quantidade: number): Promise<Produto | null> {
     const result = await query(
       `UPDATE produtos
-       SET estoque = GREATEST(0, estoque - $1)
-       WHERE id = $2
-       RETURNING *`,
+          SET estoque = GREATEST(0, estoque - $1)
+        WHERE id = $2
+        RETURNING *`,
       [quantidade, id]
     );
     return result.rows.length > 0 ? result.rows[0] : null;

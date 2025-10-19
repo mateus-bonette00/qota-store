@@ -1,12 +1,11 @@
 import axios from 'axios';
-import crypto from 'crypto';
 import { config } from '../config/env';
 
 interface AmazonCredentials {
   refreshToken: string;
   clientId: string;
   clientSecret: string;
-  region: string;
+  region: 'na' | 'eu' | 'fe'; // North America / Europe / Far East
 }
 
 interface FinancialEvent {
@@ -16,46 +15,70 @@ interface FinancialEvent {
   currency: string;
 }
 
+const REGION_ENDPOINT: Record<AmazonCredentials['region'], string> = {
+  na: 'https://sellingpartnerapi-na.amazon.com',
+  eu: 'https://sellingpartnerapi-eu.amazon.com',
+  fe: 'https://sellingpartnerapi-fe.amazon.com',
+};
+
 export class AmazonSPAPIService {
   private accessToken: string | null = null;
-  private tokenExpiry: number = 0;
+  private tokenExpiry = 0; // epoch ms
 
   constructor(private credentials: AmazonCredentials) {}
 
   /**
-   * Obter Access Token da Amazon LWA (Login with Amazon)
+   * Garante um access token válido (Login With Amazon) e retorna SEMPRE string.
    */
   private async getAccessToken(): Promise<string> {
-    // Se token ainda válido, retorna
-    if (this.accessToken && Date.now() < this.tokenExpiry) {
-      return this.accessToken;
+    // reutiliza token válido (com 60s de folga)
+    const cached = this.accessToken;
+    if (cached && Date.now() < this.tokenExpiry - 60_000) {
+      return cached; // aqui o TS sabe que é string
     }
 
     try {
-      const response = await axios.post('https://api.amazon.com/auth/o2/token', {
+      // LWA exige x-www-form-urlencoded
+      const body = new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: this.credentials.refreshToken,
         client_id: this.credentials.clientId,
         client_secret: this.credentials.clientSecret,
       });
 
-      this.accessToken = response.data.access_token;
-      this.tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // -1min de margem
+      const resp = await axios.post(
+        'https://api.amazon.com/auth/o2/token',
+        body,
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
 
-      return this.accessToken;
+      const { access_token, expires_in } = resp.data as {
+        access_token?: string;
+        expires_in?: number;
+      };
+
+      if (!access_token) {
+        throw new Error('Resposta LWA sem access_token');
+      }
+
+      this.accessToken = access_token;
+      const ttlSec = Number(expires_in ?? 3600);
+      this.tokenExpiry = Date.now() + ttlSec * 1000;
+
+      return this.accessToken; // agora é string
     } catch (error: any) {
-      console.error('Erro ao obter access token:', error.response?.data || error.message);
+      console.error('Erro ao obter access token:', error?.response?.data || error?.message || error);
       throw new Error('Falha na autenticação com Amazon SP-API');
     }
   }
 
   /**
-   * Buscar Saldo Disponível na Amazon
+   * Buscar Saldo Disponível na Amazon (exemplo simplificado com Finances API)
    */
   async getAccountBalance(): Promise<{ disponivel: number; pendente: number; moeda: string }> {
     try {
       const token = await this.getAccessToken();
-      const endpoint = `https://sellingpartnerapi-na.amazon.com`;
+      const endpoint = REGION_ENDPOINT[this.credentials.region];
       const path = '/finances/v0/financialEvents';
 
       const response = await axios.get(`${endpoint}${path}`, {
@@ -64,42 +87,36 @@ export class AmazonSPAPIService {
           'Content-Type': 'application/json',
         },
         params: {
-          PostedAfter: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Últimos 30 dias
-        }
+          // Últimos 30 dias
+          PostedAfter: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        },
       });
 
-      // Calcular saldo baseado em eventos financeiros
+      // Cálculo simples a partir de eventos (exemplo; ajuste conforme sua necessidade)
       let disponivel = 0;
       let pendente = 0;
 
-      const events = response.data.FinancialEvents || {};
-      
-      // Processar diferentes tipos de eventos
-      if (events.ShipmentEventList) {
-        events.ShipmentEventList.forEach((event: any) => {
-          event.ShipmentItemList?.forEach((item: any) => {
-            item.ItemChargeList?.forEach((charge: any) => {
-              disponivel += Number(charge.ChargeAmount?.CurrencyAmount || 0);
-            });
-          });
-        });
+      const events = response.data?.FinancialEvents || {};
+
+      if (Array.isArray(events.ShipmentEventList)) {
+        for (const event of events.ShipmentEventList) {
+          for (const item of event.ShipmentItemList ?? []) {
+            for (const charge of item.ItemChargeList ?? []) {
+              disponivel += Number(charge?.ChargeAmount?.CurrencyAmount || 0);
+            }
+          }
+        }
       }
 
       return {
         disponivel: Math.max(0, disponivel),
-        pendente,
-        moeda: 'USD'
+        pendente, // preencha se processar outros tipos de eventos
+        moeda: 'USD',
       };
-
     } catch (error: any) {
-      console.error('Erro ao buscar saldo Amazon:', error.response?.data || error.message);
-      
-      // Retornar valores do banco como fallback
-      return {
-        disponivel: 0,
-        pendente: 0,
-        moeda: 'USD'
-      };
+      console.error('Erro ao buscar saldo Amazon:', error?.response?.data || error?.message || error);
+      // fallback neutro
+      return { disponivel: 0, pendente: 0, moeda: 'USD' };
     }
   }
 
@@ -109,7 +126,7 @@ export class AmazonSPAPIService {
   async getRecentOrders(daysAgo: number = 7): Promise<any[]> {
     try {
       const token = await this.getAccessToken();
-      const endpoint = `https://sellingpartnerapi-na.amazon.com`;
+      const endpoint = REGION_ENDPOINT[this.credentials.region];
       const path = '/orders/v0/orders';
 
       const createdAfter = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
@@ -123,46 +140,44 @@ export class AmazonSPAPIService {
           MarketplaceIds: 'ATVPDKIKX0DER', // US marketplace
           CreatedAfter: createdAfter,
           OrderStatuses: 'Shipped,Unshipped',
-        }
+        },
       });
 
-      return response.data.Orders || [];
-
+      return response.data?.Orders ?? [];
     } catch (error: any) {
-      console.error('Erro ao buscar pedidos Amazon:', error.response?.data || error.message);
+      console.error('Erro ao buscar pedidos Amazon:', error?.response?.data || error?.message || error);
       return [];
     }
   }
 
   /**
-   * Buscar Detalhes de um Pedido Específico
+   * Buscar Itens de um Pedido
    */
   async getOrderItems(orderId: string): Promise<any[]> {
     try {
       const token = await this.getAccessToken();
-      const endpoint = `https://sellingpartnerapi-na.amazon.com`;
+      const endpoint = REGION_ENDPOINT[this.credentials.region];
       const path = `/orders/v0/orders/${orderId}/orderItems`;
 
       const response = await axios.get(`${endpoint}${path}`, {
         headers: {
           'x-amz-access-token': token,
           'Content-Type': 'application/json',
-        }
+        },
       });
 
-      return response.data.OrderItems || [];
-
+      return response.data?.OrderItems ?? [];
     } catch (error: any) {
-      console.error('Erro ao buscar itens do pedido:', error.response?.data || error.message);
+      console.error('Erro ao buscar itens do pedido:', error?.response?.data || error?.message || error);
       return [];
     }
   }
 }
 
-// Singleton instance
+// Singleton
 export const amazonService = new AmazonSPAPIService({
   refreshToken: config.spapi.refreshToken,
   clientId: config.spapi.clientId,
   clientSecret: config.spapi.clientSecret,
-  region: 'na' // North America
+  region: 'na', // North America
 });

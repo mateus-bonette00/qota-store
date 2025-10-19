@@ -33,4 +33,6 @@ router.patch('/:id/status', (req, res) => produtosController.updateStatus(req, r
 // DELETE /api/produtos/:id - Delete produto
 router.delete('/:id', (req, res) => produtosController.delete(req, res));
 
+
+
 export default router;

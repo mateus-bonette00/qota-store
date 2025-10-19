@@ -15,6 +15,7 @@ import { NgChartsModule } from 'ng2-charts';
 
 // >>> importe o módulo de features
 import { FeaturesModule } from './features/features.module';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { FeaturesModule } from './features/features.module';
     FormsModule,
     ReactiveFormsModule,
     NgChartsModule,
-    FeaturesModule // ✅
+    FeaturesModule,
+    SharedModule
   ],
   providers: [],
   bootstrap: [AppComponent]

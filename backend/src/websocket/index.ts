@@ -1,6 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { amazonSPAPIService } from '../services/amazon-spapi.service';
+import { amazonService } from '../services/amazon-spapi.service';
 
 export class WebSocketService {
   private io: SocketIOServer;
@@ -23,7 +23,7 @@ export class WebSocketService {
       // Cliente solicita atualização de saldo Amazon
       socket.on('request:amazon-balance', async () => {
         try {
-          const balance = await amazonSPAPIService.getAccountBalance();
+          const balance = await amazonService.getAccountBalance();
           socket.emit('update:amazon-balance', balance);
         } catch (error) {
           socket.emit('error:amazon-balance', { message: 'Erro ao buscar saldo' });
@@ -59,7 +59,7 @@ export class WebSocketService {
    */
   async broadcastAmazonBalance() {
     try {
-      const balance = await amazonSPAPIService.getAccountBalance();
+      const balance = await amazonService.getAccountBalance();
       this.broadcast('update:amazon-balance', balance);
     } catch (error) {
       console.error('[WebSocket] Erro ao broadcast de saldo Amazon:', error);

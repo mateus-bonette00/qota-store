@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+
 import { ApiService } from '../../core/services/api.service';
 import { CurrencyService } from '../../core/services/currency.service';
+import type { Currency } from '../../core/services/currency.service';
 
 interface Gasto {
   id: number;
@@ -53,7 +56,7 @@ export class DespesasComponent implements OnInit {
     'Outros'
   ];
 
-  moedas = ['BRL', 'USD', 'EUR'];
+  moedas: Currency[] = ['BRL', 'USD', 'EUR'];
 
   metodos = [
     'Pix',
@@ -82,7 +85,9 @@ export class DespesasComponent implements OnInit {
     private currencyService: CurrencyService
   ) {
     const now = new Date();
-    this.currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    this.currentMonth = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, '0')}`;
 
     this.gastoForm = this.fb.group({
       data: [now.toISOString().split('T')[0], Validators.required],
@@ -109,19 +114,26 @@ export class DespesasComponent implements OnInit {
     this.loadData();
   }
 
+  // Converte string → Currency com fallback seguro
+  private toCurrency(m: string | Currency | undefined): Currency {
+    const up = String(m ?? 'USD').toUpperCase();
+    return (['USD', 'BRL', 'EUR'] as const).includes(up as any)
+      ? (up as Currency)
+      : 'USD';
+  }
+
   async loadData() {
     this.loading = true;
     try {
       const [gastos, investimentos, produtos] = await Promise.all([
-        this.api.getGastos(this.currentMonth).toPromise(),
-        this.api.getInvestimentos(this.currentMonth).toPromise(),
-        this.api.getProdutos(this.currentMonth).toPromise()
+        firstValueFrom(this.api.getGastos(this.currentMonth)),
+        firstValueFrom(this.api.getInvestimentos(this.currentMonth)),
+        firstValueFrom(this.api.getProdutos(this.currentMonth))
       ]);
 
       this.gastos = gastos || [];
       this.investimentos = investimentos || [];
       this.produtos = produtos || [];
-
     } catch (error) {
       console.error('Erro ao carregar despesas:', error);
     } finally {
@@ -137,7 +149,7 @@ export class DespesasComponent implements OnInit {
 
     this.loading = true;
     try {
-      await this.api.createGasto(this.gastoForm.value).toPromise();
+      await firstValueFrom(this.api.createGasto(this.gastoForm.value));
       alert('Gasto adicionado com sucesso!');
       this.gastoForm.reset({
         data: new Date().toISOString().split('T')[0],
@@ -165,7 +177,7 @@ export class DespesasComponent implements OnInit {
 
     this.loading = true;
     try {
-      await this.api.createInvestimento(this.investimentoForm.value).toPromise();
+      await firstValueFrom(this.api.createInvestimento(this.investimentoForm.value));
       alert('Investimento adicionado com sucesso!');
       this.investimentoForm.reset({
         data: new Date().toISOString().split('T')[0],
@@ -189,7 +201,7 @@ export class DespesasComponent implements OnInit {
 
     this.loading = true;
     try {
-      await this.api.deleteGasto(id).toPromise();
+      await firstValueFrom(this.api.deleteGasto(id));
       alert('Gasto excluído com sucesso!');
       this.loadData();
     } catch (error) {
@@ -205,7 +217,7 @@ export class DespesasComponent implements OnInit {
 
     this.loading = true;
     try {
-      await this.api.deleteInvestimento(id).toPromise();
+      await firstValueFrom(this.api.deleteInvestimento(id));
       alert('Investimento excluído com sucesso!');
       this.loadData();
     } catch (error) {
@@ -221,7 +233,7 @@ export class DespesasComponent implements OnInit {
 
     this.loading = true;
     try {
-      await this.api.deleteProduto(id).toPromise();
+      await firstValueFrom(this.api.deleteProduto(id));
       alert('Produto excluído com sucesso!');
       this.loadData();
     } catch (error) {
@@ -232,8 +244,9 @@ export class DespesasComponent implements OnInit {
     }
   }
 
-  formatCurrency(value: number, moeda: string): string {
-    return this.currencyService.format(value, moeda);
+  // ← aqui estava o erro de tipagem
+  formatCurrency(value: number, moeda: string | Currency): string {
+    return this.currencyService.format(value, this.toCurrency(moeda));
   }
 
   formatDate(date: string): string {
@@ -247,7 +260,7 @@ export class DespesasComponent implements OnInit {
     const unit = Number(p.custo_base || 0);
     const prep = Number(p.prep || 0);
     const freight = Number(p.freight || 0);
-    return (qty * (unit + prep)) + freight;
+    return qty * (unit + prep) + freight;
   }
 
   getMarginPct(p: any): string {

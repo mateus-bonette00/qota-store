@@ -2,33 +2,25 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Produto, ProdutoWithMetrics, ProdutoKanbanColumn, ProdutoStatus } from '../models/produto.model';
+import {
+  Produto, ProdutoWithMetrics, ProdutoKanbanColumn, ProdutoStatus
+} from '../models/produto.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ProdutosService {
-  private apiUrl = `${environment.apiUrl}/produtos`;
+  private apiUrl = `${environment.apiUrl}/produtos`; // <-- aqui
 
   constructor(private http: HttpClient) {}
 
   list(filters?: {
-    status?: ProdutoStatus;
-    categoria?: string;
-    sku?: string;
-    asin?: string;
-    fornecedor?: string;
+    status?: ProdutoStatus; categoria?: string; sku?: string; asin?: string; fornecedor?: string;
   }): Observable<Produto[]> {
     let params = new HttpParams();
-
     if (filters) {
-      Object.keys(filters).forEach(key => {
-        if ((filters as any)[key]) {
-          params = params.set(key, (filters as any)[key]);
-        }
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
       });
     }
-
     return this.http.get<Produto[]>(this.apiUrl, { params });
   }
 

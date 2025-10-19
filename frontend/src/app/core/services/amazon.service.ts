@@ -1,56 +1,51 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AmazonBalance {
   disponivel: number;
   pendente: number;
-  moeda: string;
-  data?: string;
+  moeda: 'USD' | 'BRL' | 'EUR' | string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AmazonService {
   private apiUrl = environment.apiUrl;
+
   private balanceSubject = new BehaviorSubject<AmazonBalance | null>(null);
-  public balance$ = this.balanceSubject.asObservable();
+  /** stream público para quem quiser observar o saldo */
+  public balances = this.balanceSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Buscar saldo Amazon (cache ou forçar refresh)
+   * Buscar saldo Amazon (cacheado no BehaviorSubject ou forçar refresh)
    */
   getBalance(forceRefresh: boolean = false): Observable<AmazonBalance> {
-    const params = forceRefresh ? { force_refresh: 'true' } : {};
+    let params = new HttpParams();
+    if (forceRefresh) {
+      params = params.set('force_refresh', 'true');
+    }
 
-    return this.http.get<AmazonBalance>(`${this.apiUrl}/amazon/saldos/latest`, { params })
-      .pipe(
-        tap(balance => this.balanceSubject.next(balance))
-      );
+    return this.http
+      .get<AmazonBalance>(`${this.apiUrl}/amazon/saldos/latest`, { params })
+      .pipe(tap((balance) => this.balanceSubject.next(balance)));
   }
 
   /**
-   * Sincronizar pedidos da Amazon
+   * Sincronizar pedidos da Amazon (últimos X dias)
    */
   syncOrders(days: number = 7): Observable<any> {
-    return this.http.post(`${this.apiUrl}/amazon/sync/orders`, { days });
+    return this.http.post<any>(`${this.apiUrl}/amazon/sync/orders`, { days });
   }
 
   /**
    * Testar conexão com Amazon SP-API
    */
-  testConnection(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/amazon/test-connection`);
-  }
-
-  /**
-   * Atualizar saldo manualmente
-   */
-  updateBalance(balance: AmazonBalance): Observable<any> {
-    return this.http.post(`${this.apiUrl}/amazon/saldos`, balance);
+  testConnection(): Observable<{ success: boolean; message: string; balance?: AmazonBalance }> {
+    return this.http.get<{ success: boolean; message: string; balance?: AmazonBalance }>(
+      `${this.apiUrl}/amazon/test-connection`
+    );
   }
 }

@@ -8,6 +8,7 @@ import { DespesasComponent } from './despesas/despesas.component';
 import { GraficosComponent } from './graficos/graficos.component';
 import { ProdutosComponent } from './produtos/produtos.component';
 import { ReceitasComponent } from './receitas/receitas.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { ReceitasComponent } from './receitas/receitas.component';
     CommonModule,
     FeaturesRoutingModule,
     FormsModule,              // ⭐ ADICIONAR
-    ReactiveFormsModule       // ⭐ ADICIONAR
+    ReactiveFormsModule,
+    SharedModule      // ⭐ ADICIONAR
   ]
 })
 export class FeaturesModule {}
