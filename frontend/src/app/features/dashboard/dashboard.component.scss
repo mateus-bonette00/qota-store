@@ -1,0 +1,267 @@
+.dashboard > * + * {
+  margin-top: 1.5rem;
+}
+
+// Amazon Balance Card
+.amazon-balance-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+  background:
+    linear-gradient(to right, rgba(124, 56, 40, 0.6), rgba(87, 37, 28, 0.6)),
+    rgba(254, 88, 8, 0.18);
+  border: 2px solid #FE5808;
+}
+
+.amazon-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.875rem;
+  background: rgba(254, 88, 8, 0.25);
+  border: 2px solid #FE5808;
+  flex-shrink: 0;
+}
+
+.amazon-content {
+  flex: 1;
+}
+
+.amazon-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  opacity: 0.85;
+}
+
+.amazon-value {
+  font-size: 1.875rem;
+  font-weight: 900;
+  margin: 0.5rem 0;
+}
+
+.amazon-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.btn-refresh, .btn-sync {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.btn-sync {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+// Auto-refresh bar
+.auto-refresh-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+
+  .countdown {
+    font-weight: 700;
+    color: #3b82f6;
+  }
+
+  .btn-toggle {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.3);
+    }
+  }
+}
+
+// Section Title
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 900;
+  text-align: center;
+  color: #2F529E;
+}
+
+// KPI Grid
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.kpi-card {
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+  background: rgba(31, 41, 55, 0.6);
+}
+
+.kpi-card.receita  { border: 1px solid #22c55e; }
+.kpi-card.despesa  { border: 1px solid #ef4444; }
+.kpi-card.resultado{ border: 1px solid #3b82f6; }
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.kpi-icon {
+  font-size: 2.25rem;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.kpi-value-usd {
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.kpi-value-usd.green, .kpi-value-usd.positive { color: #34d399; }
+.kpi-value-usd.red,   .kpi-value-usd.negative { color: #f87171; }
+.kpi-value-usd.neutral { color: #9ca3af; }
+
+.kpi-value-brl {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.kpi-value-brl.green, .kpi-value-brl.positive { color: #86efac; }
+.kpi-value-brl.red,   .kpi-value-brl.negative { color: #fca5a5; }
+.kpi-value-brl.neutral { color: #d1d5db; }
+
+// Divider
+.divider {
+  border-color: #374151;
+}
+
+// Lucros Grid
+.lucros-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .lucros-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.lucro-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+  background:
+    linear-gradient(to right, rgba(40, 80, 60, 0.45), rgba(22, 44, 34, 0.45)),
+    rgba(46, 204, 113, 0.18);
+  border: 2px solid #2ECC71;
+}
+
+.lucro-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(46, 204, 113, 0.18);
+  border: 1px solid #2ECC71;
+}
+
+.lucro-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.lucro-value {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: #86efac;
+}
+
+// Loading
+.loading {
+  text-align: center;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  border-radius: 9999px;
+  height: 3rem;
+  width: 3rem;
+  border-top: 2px solid #2F529E;
+  border-bottom: 2px solid #2F529E;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 1rem;
+  color: #9ca3af;
+}

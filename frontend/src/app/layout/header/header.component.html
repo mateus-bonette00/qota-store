@@ -1,0 +1,56 @@
+<header class="header">
+  <div class="header-container">
+    <!-- Título -->
+    <div class="header-title-wrapper">
+      <h1 class="header-title">
+        Controle Financeiro Qota Store
+      </h1>
+    </div>
+
+    <!-- Filtros de Mês/Ano -->
+    <div class="header-filters">
+      <label class="filter-label">
+        <span>Mês:</span>
+        <select
+          [(ngModel)]="selectedMonth"
+          (change)="onMonthChange()"
+          class="filter-select">
+          <option value="01">Janeiro</option>
+          <option value="02">Fevereiro</option>
+          <option value="03">Março</option>
+          <option value="04">Abril</option>
+          <option value="05">Maio</option>
+          <option value="06">Junho</option>
+          <option value="07">Julho</option>
+          <option value="08">Agosto</option>
+          <option value="09">Setembro</option>
+          <option value="10">Outubro</option>
+          <option value="11">Novembro</option>
+          <option value="12">Dezembro</option>
+        </select>
+      </label>
+
+      <label class="filter-label">
+        <span>Ano:</span>
+        <select
+          [(ngModel)]="selectedYear"
+          (change)="onYearChange()"
+          class="filter-select">
+          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- Navegação -->
+    <nav class="header-nav">
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-link">
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </a>
+    </nav>
+  </div>
+</header>

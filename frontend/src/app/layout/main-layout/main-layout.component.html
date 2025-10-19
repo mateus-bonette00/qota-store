@@ -1,0 +1,11 @@
+<div class="main-layout">
+  <app-header (monthYearChange)="onMonthYearChange($event)"></app-header>
+
+  <main class="main-content">
+    <ng-content></ng-content>
+  </main>
+
+  <footer class="main-footer">
+    <p>&copy; {{ currentYear }} Qota Store - Todos os direitos reservados</p>
+  </footer>
+</div>

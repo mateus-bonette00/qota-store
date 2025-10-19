@@ -1,0 +1,169 @@
+<div class="dashboard">
+  <!-- Saldo Amazon com botão de refresh -->
+  <div class="amazon-balance-card">
+    <div class="amazon-icon">🛒</div>
+    <div class="amazon-content">
+      <div class="amazon-label">
+        SALDO AMAZON (DISPONÍVEL) — USD
+      </div>
+      <div class="amazon-value">
+        {{ formatUSD(saldo?.disponivel) }}
+      </div>
+      <div class="amazon-actions">
+        <button
+          class="btn-refresh"
+          (click)="refreshSaldoAmazon()"
+          [disabled]="refreshingSaldo">
+          <span *ngIf="!refreshingSaldo">🔄 Atualizar da API</span>
+          <span *ngIf="refreshingSaldo">⏳ Atualizando...</span>
+        </button>
+
+        <button
+          class="btn-sync"
+          (click)="syncAmazonOrders()"
+          [disabled]="loading">
+          📥 Sincronizar Vendas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-refresh info -->
+  <div class="auto-refresh-bar" *ngIf="autoRefreshEnabled">
+    <span>🔄 Auto-atualização ativa</span>
+    <span class="countdown">Próxima em: {{ formatTime(nextRefreshIn) }}</span>
+    <button class="btn-toggle" (click)="toggleAutoRefresh()">
+      {{ autoRefreshEnabled ? '⏸️ Pausar' : '▶️ Ativar' }}
+    </button>
+  </div>
+
+  <!-- Resumo do Mês -->
+  <h3 class="section-title">
+    Resumo do Mês — {{ getMonthLabel(currentMonth) }}
+  </h3>
+
+  <div class="kpi-grid">
+    <!-- Receitas -->
+    <div class="kpi-card receita">
+      <div class="kpi-content">
+        <div class="kpi-icon">📈</div>
+        <div>
+          <div class="kpi-label">Receitas (mês)</div>
+          <div class="kpi-value-usd green">USD: {{ formatUSD(resumoMes?.recUSD) }}</div>
+          <div class="kpi-value-brl green">BRL: {{ formatBRL(resumoMes?.recBRL) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Despesas -->
+    <div class="kpi-card despesa">
+      <div class="kpi-content">
+        <div class="kpi-icon">📉</div>
+        <div>
+          <div class="kpi-label">Despesas (mês)</div>
+          <div class="kpi-value-usd red">USD: {{ formatUSD(resumoMes?.despUSD) }}</div>
+          <div class="kpi-value-brl red">BRL: {{ formatBRL(resumoMes?.despBRL) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="kpi-card resultado">
+      <div class="kpi-content">
+        <div class="kpi-icon">💰</div>
+        <div>
+          <div class="kpi-label">Resultado (mês)</div>
+          <div class="kpi-value-usd" [ngClass]="getResultClass(resultadoMesUSD)">
+            USD: {{ formatUSD(resultadoMesUSD) }}
+          </div>
+          <div class="kpi-value-brl" [ngClass]="getResultClass(resultadoMesBRL)">
+            BRL: {{ formatBRL(resultadoMesBRL) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Totais Acumulados -->
+  <h3 class="section-title">
+    Valor Total — Somas de Todos os Meses
+  </h3>
+
+  <div class="kpi-grid">
+    <div class="kpi-card receita">
+      <div class="kpi-content">
+        <div class="kpi-icon">📊</div>
+        <div>
+          <div class="kpi-label">Receitas (total)</div>
+          <div class="kpi-value-usd green">USD: {{ formatUSD(totais?.recUSD) }}</div>
+          <div class="kpi-value-brl green">BRL: {{ formatBRL(totais?.recBRL) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card despesa">
+      <div class="kpi-content">
+        <div class="kpi-icon">💸</div>
+        <div>
+          <div class="kpi-label">Despesas (total)</div>
+          <div class="kpi-value-usd red">USD: {{ formatUSD(totais?.despUSD) }}</div>
+          <div class="kpi-value-brl red">BRL: {{ formatBRL(totais?.despBRL) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card resultado">
+      <div class="kpi-content">
+        <div class="kpi-icon">🎯</div>
+        <div>
+          <div class="kpi-label">Resultado (total)</div>
+          <div class="kpi-value-usd" [ngClass]="getResultClass(resultadoTotalUSD)">
+            USD: {{ formatUSD(resultadoTotalUSD) }}
+          </div>
+          <div class="kpi-value-brl" [ngClass]="getResultClass(resultadoTotalBRL)">
+            BRL: {{ formatBRL(resultadoTotalBRL) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Lucros -->
+  <h3 class="section-title">Lucros</h3>
+
+  <div class="lucros-grid">
+    <div class="lucro-card">
+      <div class="lucro-icon">📈</div>
+      <div>
+        <div class="lucro-label">
+          Lucro realizado no período — {{ getMonthLabel(currentMonth) }}
+        </div>
+        <div class="lucro-value">
+          {{ formatUSD(lucros?.lucroPeriodo) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="lucro-card">
+      <div class="lucro-icon">💎</div>
+      <div>
+        <div class="lucro-label">
+          Lucro TOTAL — soma de todos os meses
+        </div>
+        <div class="lucro-value">
+          {{ formatUSD(lucros?.lucroTotal) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p class="loading-text">Carregando dados...</p>
+  </div>
+</div>

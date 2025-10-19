@@ -1,0 +1,255 @@
+<div class="despesas-page">
+  <h2 class="page-title">Despesas</h2>
+
+  <!-- ========== GASTOS ========== -->
+  <section class="section">
+    <h3 class="section-title">Gastos</h3>
+
+    <form [formGroup]="gastoForm" (ngSubmit)="onSubmitGasto()" class="form-panel">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" formControlName="data" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select formControlName="categoria" class="form-control">
+            <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" formControlName="descricao" class="form-control"
+                 placeholder="Ex: Facebook Ads Janeiro">
+        </div>
+
+        <div class="form-group">
+          <label>Valor *</label>
+          <input type="number" formControlName="valor" class="form-control"
+                 step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label>Moeda *</label>
+          <select formControlName="moeda" class="form-control">
+            <option value="BRL">🇧🇷 Real (BRL)</option>
+            <option value="USD">🇺🇸 Dólar (USD)</option>
+            <option value="EUR">🇪🇺 Euro (EUR)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Método</label>
+          <select formControlName="metodo" class="form-control">
+            <option *ngFor="let metodo of metodos" [value]="metodo">{{ metodo }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Conta</label>
+          <select formControlName="conta" class="form-control">
+            <option *ngFor="let conta of contas" [value]="conta">{{ conta }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Quem</label>
+          <select formControlName="quem" class="form-control">
+            <option *ngFor="let pessoa of quemOptions" [value]="pessoa">{{ pessoa }}</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="loading || gastoForm.invalid">
+        <span *ngIf="!loading">➕ Adicionar Gasto</span>
+        <span *ngIf="loading">⏳ Salvando...</span>
+      </button>
+    </form>
+
+    <!-- Tabela de Gastos -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th>Valor Original</th>
+            <th>Valor (BRL)</th>
+            <th>Valor (USD)</th>
+            <th>Método</th>
+            <th>Quem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let gasto of gastos">
+            <td>{{ gasto.id }}</td>
+            <td>{{ formatDate(gasto.data) }}</td>
+            <td>{{ gasto.categoria }}</td>
+            <td>{{ gasto.descricao || '-' }}</td>
+            <td class="currency-cell">
+              <span class="currency-badge" [class]="'badge-' + gasto.moeda">
+                {{ formatCurrency(gasto.valor, gasto.moeda) }}
+              </span>
+            </td>
+            <td class="currency-cell">{{ formatCurrency(gasto.valor_brl, 'BRL') }}</td>
+            <td class="currency-cell">{{ formatCurrency(gasto.valor_usd, 'USD') }}</td>
+            <td>{{ gasto.metodo }}</td>
+            <td>{{ gasto.quem }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" (click)="deleteGasto(gasto.id)">
+                🗑️ Excluir
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="gastos.length === 0">
+            <td colspan="10" class="empty-state">Nenhum gasto cadastrado neste período</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ========== INVESTIMENTOS ========== -->
+  <section class="section">
+    <h3 class="section-title">Investimentos</h3>
+
+    <form [formGroup]="investimentoForm" (ngSubmit)="onSubmitInvestimento()" class="form-panel">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" formControlName="data" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Valor BRL</label>
+          <input type="number" formControlName="valor_brl" class="form-control"
+                 step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Valor USD</label>
+          <input type="number" formControlName="valor_usd" class="form-control"
+                 step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Método</label>
+          <select formControlName="metodo" class="form-control">
+            <option *ngFor="let metodo of metodos" [value]="metodo">{{ metodo }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Conta</label>
+          <select formControlName="conta" class="form-control">
+            <option *ngFor="let conta of contas" [value]="conta">{{ conta }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Quem</label>
+          <select formControlName="quem" class="form-control">
+            <option *ngFor="let pessoa of quemOptions" [value]="pessoa">{{ pessoa }}</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="loading || investimentoForm.invalid">
+        <span *ngIf="!loading">➕ Adicionar Investimento</span>
+        <span *ngIf="loading">⏳ Salvando...</span>
+      </button>
+    </form>
+
+    <!-- Tabela de Investimentos -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Valor (BRL)</th>
+            <th>Valor (USD)</th>
+            <th>Método</th>
+            <th>Quem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of investimentos">
+            <td>{{ inv.id }}</td>
+            <td>{{ formatDate(inv.data) }}</td>
+            <td class="currency-cell">{{ formatCurrency(inv.valor_brl, 'BRL') }}</td>
+            <td class="currency-cell">{{ formatCurrency(inv.valor_usd, 'USD') }}</td>
+            <td>{{ inv.metodo }}</td>
+            <td>{{ inv.quem }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" (click)="deleteInvestimento(inv.id)">
+                🗑️ Excluir
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="investimentos.length === 0">
+            <td colspan="7" class="empty-state">Nenhum investimento cadastrado neste período</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ========== PRODUTOS COMPRADOS ========== -->
+  <section class="section">
+    <h3 class="section-title">Produtos Comprados</h3>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Nome</th>
+            <th>UPC</th>
+            <th>ASIN</th>
+            <th>Quantidade</th>
+            <th>Valor Total (USD)</th>
+            <th>Margem (%)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of produtos">
+            <td>{{ p.id }}</td>
+            <td>{{ formatDate(p.data_add) }}</td>
+            <td>{{ p.nome }}</td>
+            <td>{{ p.upc || '-' }}</td>
+            <td>{{ p.asin || '-' }}</td>
+            <td class="text-center">{{ p.quantidade }}</td>
+            <td class="currency-cell">{{ formatCurrency(getTotalProduto(p), 'USD') }}</td>
+            <td class="text-center">{{ getMarginPct(p) }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" (click)="deleteProduto(p.id)">
+                🗑️ Excluir
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="produtos.length === 0">
+            <td colspan="9" class="empty-state">Nenhum produto comprado neste período</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+</div>
