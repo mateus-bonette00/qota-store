@@ -1,16 +1,391 @@
-.page-placeholder {
-  text-align: center;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+.receitas-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #0a122b 0%, #0d1735 100%);
+  min-height: 100vh;
+  color: #e9eef9;
+}
+
+// Logo e Header
+.header-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.logo-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #2F529E 0%, #4168b8 100%);
+  border: 3px solid #4168b8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 900;
+  color: #FE0000;
+  font-family: 'Poppins', sans-serif;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #2F529E;
+  line-height: 1;
+  font-family: 'Poppins', sans-serif;
+}
+
+.logo-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2F529E;
+  letter-spacing: 2px;
+  font-family: 'Poppins', sans-serif;
 }
 
 .page-title {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
+  font-size: 28px;
   font-weight: 700;
-  margin-bottom: 1rem;
+  color: #2F529E;
+  text-align: center;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
 }
 
-.page-subtitle {
-  color: #9ca3af;
+// Filtros
+.filters-section {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-weight: 600;
+    color: #e9eef9;
+  }
+
+  select {
+    padding: 8px 16px;
+    background: #1a2445;
+    border: 1px solid #2F529E;
+    border-radius: 6px;
+    color: #e9eef9;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      border-color: #4168b8;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #FE0000;
+      box-shadow: 0 0 0 2px rgba(254, 0, 0, 0.1);
+    }
+  }
+}
+
+// Navegação de Abas
+.tabs-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: #1a2445;
+  border: none;
+  border-radius: 8px;
+  color: #e9eef9;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    background: #243054;
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    background: #2F529E;
+    color: #fff;
+  }
+
+  &.active-highlight {
+    background: #FE0000;
+    color: #fff;
+
+    &:hover {
+      background: #d40000;
+    }
+  }
+}
+
+// Conteúdo das Abas
+.tab-content {
+  background: #1a2445;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2F529E;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+// Formulário
+.form-section {
+  background: #0d1735;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid #2F529E;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-weight: 600;
+    color: #e9eef9;
+    font-size: 14px;
+  }
+
+  .form-control {
+    padding: 12px 16px;
+    background: #243054;
+    border: 1px solid #2F529E;
+    border-radius: 8px;
+    color: #e9eef9;
+    font-size: 14px;
+    transition: all 0.3s;
+
+    &:focus {
+      outline: none;
+      border-color: #4168b8;
+      box-shadow: 0 0 0 2px rgba(65, 104, 184, 0.2);
+    }
+
+    &::placeholder {
+      color: #6b7fa8;
+    }
+  }
+
+  select.form-control {
+    cursor: pointer;
+  }
+}
+
+.btn-add-amazon {
+  width: 100%;
+  padding: 14px;
+  background: #FE0000;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 8px;
+
+  &:hover {
+    background: #d40000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(254, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Resumo
+.summary-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.summary-box {
+  background: linear-gradient(135deg, #1a2445 0%, #243054 100%);
+  border: 2px solid #2F529E;
+  border-radius: 12px;
+  padding: 20px;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e9eef9;
+    margin: 0 0 16px 0;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .summary-values {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .label {
+      font-weight: 600;
+      color: #b3c0d9;
+    }
+
+    .value {
+      font-weight: 700;
+      font-size: 18px;
+      color: #4ade80;
+    }
+  }
+}
+
+// Tabela
+.table-section {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #0d1735;
+  border-radius: 8px;
+  overflow: hidden;
+
+  thead {
+    background: #2F529E;
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #243054;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #1a2445;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 14px 16px;
+      color: #e9eef9;
+      font-size: 14px;
+    }
+  }
+}
+
+.btn-delete {
+  padding: 8px 16px;
+  background: #FE0000;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover {
+    background: #d40000;
+    transform: scale(1.05);
+  }
+}
+
+.coming-soon {
+  text-align: center;
+  color: #6b7fa8;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 60px;
+}
+
+// Responsivo
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-section {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs-nav {
+    flex-direction: column;
+  }
+
+  .tab-btn {
+    width: 100%;
+  }
+
+  .data-table {
+    font-size: 12px;
+
+    th, td {
+      padding: 10px 8px;
+    }
+  }
 }

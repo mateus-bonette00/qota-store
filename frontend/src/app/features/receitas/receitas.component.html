@@ -1,4 +1,217 @@
-<div class="page-placeholder">
-  <h2 class="page-title">Receitas (FBA)</h2>
-  <p class="page-subtitle">Em desenvolvimento...</p>
+<div class="receitas-container">
+  <!-- Logo e Título -->
+  <div class="header-section">
+    <div class="logo">
+      <div class="logo-icon">Q</div>
+      <div class="logo-text">
+        <div class="logo-title">QOTA</div>
+        <div class="logo-subtitle">STORE</div>
+      </div>
+    </div>
+    <h1 class="page-title">Controle Financeiro Qota Store</h1>
+  </div>
+
+  <!-- Filtros de Mês e Ano -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Mês:</label>
+      <select [(ngModel)]="selectedMonth" (change)="onMonthChange()">
+        <option value="01">Janeiro</option>
+        <option value="02">Fevereiro</option>
+        <option value="03">Março</option>
+        <option value="04">Abril</option>
+        <option value="05">Maio</option>
+        <option value="06">Junho</option>
+        <option value="07">Julho</option>
+        <option value="08">Agosto</option>
+        <option value="09">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Ano:</label>
+      <select [(ngModel)]="selectedYear" (change)="onMonthChange()">
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Navegação de Abas -->
+  <div class="tabs-nav">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'receitas'"
+      (click)="setTab('receitas')">
+      <i class="icon-home"></i> Principal
+    </button>
+    <button
+      class="tab-btn active-highlight"
+      [class.active]="activeTab === 'receitas'"
+      (click)="setTab('receitas')">
+      <i class="icon-dollar"></i> Receitas (FBA)
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'graficos'"
+      (click)="setTab('graficos')">
+      <i class="icon-chart"></i> Gráficos
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'despesas'"
+      (click)="setTab('despesas')">
+      <i class="icon-expense"></i> Despesas
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'produtos-comprados'"
+      (click)="setTab('produtos-comprados')">
+      <i class="icon-box"></i> Produtos Comprados
+    </button>
+  </div>
+
+  <!-- Conteúdo da Aba de Receitas -->
+  <div class="tab-content" *ngIf="activeTab === 'receitas'">
+    <h2 class="section-title">Produtos Vendidos (Receitas)</h2>
+
+    <!-- Formulário de Cadastro -->
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data do crédito</label>
+          <input type="date" [(ngModel)]="novaReceita.data" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Produto vendido (SKU | UPC | Nome)</label>
+          <select (change)="onProdutoSelect($event)" class="form-control">
+            <option value="">Selecione um produto</option>
+            <option *ngFor="let produto of produtos" [value]="produto.id">
+              {{ produto.sku || '' }} | {{ produto.upc || '' }} | {{ produto.nome }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantidade vendida</label>
+          <input type="number" [(ngModel)]="novaReceita.quantidade" class="form-control" min="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Valor recebido (USD) por unidade</label>
+          <input type="number" [(ngModel)]="novaReceita.valor" class="form-control" step="0.01" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quem lançou</label>
+          <input type="text" [(ngModel)]="novaReceita.quem" class="form-control" placeholder="Nome" />
+        </div>
+
+        <div class="form-group">
+          <label>Observação</label>
+          <input type="text" [(ngModel)]="novaReceita.descricao" class="form-control" placeholder="Observação" />
+        </div>
+      </div>
+
+      <button class="btn-add-amazon" (click)="adicionarRecebimento()">
+        Adicionar recebimento (Amazon)
+      </button>
+    </div>
+
+    <!-- Resumo do Período -->
+    <div class="summary-section" *ngIf="summary">
+      <div class="summary-box">
+        <h3>VENDIDO NO PERÍODO — {{ selectedMonth }}/{{ selectedYear }}</h3>
+        <div class="summary-values">
+          <div class="summary-item">
+            <span class="label">Quantidade:</span>
+            <span class="value">{{ summary.quantidade_vendas }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Valor:</span>
+            <span class="value">${{ summary.total_bruto_usd.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <h3>VENDIDO (TOTAL — TODOS OS MESES)</h3>
+        <div class="summary-values">
+          <div class="summary-item">
+            <span class="label">Quantidade:</span>
+            <span class="value">{{ summary.quantidade_vendas }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Valor:</span>
+            <span class="value">${{ summary.total_bruto_usd.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Receitas -->
+    <div class="table-section">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>SKU</th>
+            <th>Qtd</th>
+            <th>Valor (USD)</th>
+            <th>Quem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="8" style="text-align: center;">Carregando...</td>
+          </tr>
+          <tr *ngIf="!loading && receitas.length === 0">
+            <td colspan="8" style="text-align: center;">Nenhuma receita encontrada</td>
+          </tr>
+          <tr *ngFor="let receita of receitas">
+            <td>{{ receita.id }}</td>
+            <td>{{ receita.data }}</td>
+            <td>{{ receita.descricao || '-' }}</td>
+            <td>{{ receita.sku || '-' }}</td>
+            <td>{{ receita.quantidade }}</td>
+            <td>${{ receita.valor_usd?.toFixed(2) || '0.00' }}</td>
+            <td>{{ receita.quem || '-' }}</td>
+            <td>
+              <button class="btn-delete" (click)="excluirReceita(receita.id!)">Excluir</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Conteúdo da Aba de Gráficos -->
+  <div class="tab-content" *ngIf="activeTab === 'graficos'">
+    <h2 class="section-title">Gráficos</h2>
+    <p class="coming-soon">Em desenvolvimento...</p>
+  </div>
+
+  <!-- Conteúdo da Aba de Despesas -->
+  <div class="tab-content" *ngIf="activeTab === 'despesas'">
+    <h2 class="section-title">Despesas</h2>
+    <p class="coming-soon">Em desenvolvimento...</p>
+  </div>
+
+  <!-- Conteúdo da Aba de Produtos Comprados -->
+  <div class="tab-content" *ngIf="activeTab === 'produtos-comprados'">
+    <h2 class="section-title">Produtos Comprados</h2>
+    <p class="coming-soon">Em desenvolvimento...</p>
+  </div>
 </div>

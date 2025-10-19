@@ -114,4 +114,109 @@ export class ApiService {
     const params = month ? new HttpParams().set('month', month) : new HttpParams();
     return this.http.get<any>(`${this.apiUrl}/metrics/dashboard`, { params });
   }
+
+  // ========== RECEITAS (FBA) ==========
+  getReceitas(filters?: any): Observable<any[]> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key]);
+        }
+      });
+    }
+    return this.http.get<any[]>(`${this.apiUrl}/receitas`, { params });
+  }
+
+  getReceitaById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/receitas/${id}`);
+  }
+
+  createReceita(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/receitas`, data);
+  }
+
+  updateReceita(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/receitas/${id}`, data);
+  }
+
+  deleteReceita(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/receitas/${id}`);
+  }
+
+  getReceitasSummary(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key]);
+        }
+      });
+    }
+    return this.http.get<any>(`${this.apiUrl}/receitas/summary`, { params });
+  }
+
+  getReceitasPorProduto(filters?: any): Observable<any[]> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key]);
+        }
+      });
+    }
+    return this.http.get<any[]>(`${this.apiUrl}/receitas/por-produto`, { params });
+  }
+
+  // ========== FORNECEDORES ==========
+  getFornecedores(search?: string): Observable<any[]> {
+    const params = search ? new HttpParams().set('search', search) : new HttpParams();
+    return this.http.get<any[]>(`${this.apiUrl}/fornecedores`, { params });
+  }
+
+  getFornecedorById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/fornecedores/${id}`);
+  }
+
+  createFornecedor(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/fornecedores`, data);
+  }
+
+  updateFornecedor(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/fornecedores/${id}`, data);
+  }
+
+  deleteFornecedor(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/fornecedores/${id}`);
+  }
+
+  // ========== COMPANY INFO ==========
+  getCompanyInfo(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/company-info`);
+  }
+
+  updateCompanyInfo(data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/company-info`, data);
+  }
+
+  // ========== SISTEMAS EXTERNOS ==========
+  getSistemasExternos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/sistemas-externos`);
+  }
+
+  getSistemaExternoById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/sistemas-externos/${id}`);
+  }
+
+  createSistemaExterno(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/sistemas-externos`, data);
+  }
+
+  updateSistemaExterno(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/sistemas-externos/${id}`, data);
+  }
+
+  deleteSistemaExterno(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/sistemas-externos/${id}`);
+  }
 }
