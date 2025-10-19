@@ -1,4 +1,342 @@
-<div class="page-placeholder">
-  <h2 class="page-title">Produtos</h2>
-  <p class="page-subtitle">Em desenvolvimento...</p>
+<div class="produtos-page">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>📦 Gestão de Produtos FBA</h1>
+
+    <div class="header-actions">
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button
+          [class.active]="viewMode === 'kanban'"
+          (click)="switchView('kanban')">
+          📋 Kanban
+        </button>
+        <button
+          [class.active]="viewMode === 'table'"
+          (click)="switchView('table')">
+          📊 Tabela
+        </button>
+      </div>
+
+      <button class="btn-primary" (click)="showForm = true">
+        ➕ Novo Produto
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <input
+      type="text"
+      placeholder="🔍 Buscar por nome, SKU ou ASIN..."
+      [(ngModel)]="searchTerm"
+      class="search-input">
+
+    <select [(ngModel)]="selectedCategoria" class="filter-select">
+      <option value="">Todas as categorias</option>
+      <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+    </select>
+
+    <select [(ngModel)]="selectedFornecedor" class="filter-select">
+      <option value="">Todos os fornecedores</option>
+      <option *ngFor="let forn of fornecedores" [value]="forn">{{ forn }}</option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Carregando produtos...</p>
+  </div>
+
+  <!-- KANBAN VIEW -->
+  <div *ngIf="viewMode === 'kanban' && !loading" class="kanban-container">
+    <app-kanban-board
+      [columns]="kanbanColumns"
+      [cardTemplate]="productCardTemplate"
+      (cardMoved)="onProductMoved($event)"
+      (cardClicked)="onProductClicked($event)"
+    ></app-kanban-board>
+
+    <!-- Template for product card -->
+    <ng-template #productCardTemplate let-product>
+      <div class="product-card">
+        <div class="card-header">
+          <h4>{{ product.nome }}</h4>
+          <span class="badge-margin" [class.high]="product.margem_percentual > 40">
+            {{ product.margem_percentual | number:'1.1-1' }}%
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">SKU:</span>
+            <span class="value">{{ product.sku || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">ASIN:</span>
+            <span class="value">{{ product.asin || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Estoque:</span>
+            <span class="value">{{ product.estoque }} un</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fornecedor:</span>
+            <span class="value">{{ product.fornecedor || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="price-info">
+            <div>
+              <small>Custo</small>
+              <strong>${{ product.custo_total | number:'1.2-2' }}</strong>
+            </div>
+            <div>
+              <small>Venda</small>
+              <strong>${{ product.sold_for | number:'1.2-2' }}</strong>
+            </div>
+            <div>
+              <small>Lucro</small>
+              <strong class="profit">${{ product.lucro_unitario | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-links" *ngIf="product.link_amazon || product.link_fornecedor">
+          <a *ngIf="product.link_amazon" [href]="product.link_amazon" target="_blank" class="link-btn">
+            🔗 Amazon
+          </a>
+          <a *ngIf="product.link_fornecedor" [href]="product.link_fornecedor" target="_blank" class="link-btn">
+            🔗 Fornecedor
+          </a>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div *ngIf="viewMode === 'table' && !loading" class="table-container">
+    <table class="produtos-table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Nome</th>
+          <th>SKU</th>
+          <th>ASIN</th>
+          <th>Categoria</th>
+          <th>Fornecedor</th>
+          <th>Estoque</th>
+          <th>Custo Total</th>
+          <th>Preço Venda</th>
+          <th>Margem</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let produto of produtos">
+          <td>
+            <span class="status-badge" [style.background-color]="getStatusColor(produto.status)">
+              {{ getStatusLabel(produto.status) }}
+            </span>
+          </td>
+          <td><strong>{{ produto.nome }}</strong></td>
+          <td>{{ produto.sku || '-' }}</td>
+          <td>{{ produto.asin || '-' }}</td>
+          <td>{{ produto.categoria || '-' }}</td>
+          <td>{{ produto.fornecedor || '-' }}</td>
+          <td>{{ produto.estoque }}</td>
+          <td>${{ produto.custo_total | number:'1.2-2' }}</td>
+          <td>${{ produto.sold_for | number:'1.2-2' }}</td>
+          <td>
+            <span
+              class="margem-badge"
+              [class.high]="produto.margem_percentual > 40"
+              [class.medium]="produto.margem_percentual >= 20 && produto.margem_percentual <= 40"
+              [class.low]="produto.margem_percentual < 20">
+              {{ produto.margem_percentual | number:'1.1-1' }}%
+            </span>
+          </td>
+          <td>
+            <button (click)="onProductClicked(produto)" class="btn-icon">✏️</button>
+            <button (click)="deleteProduto(produto.id!)" class="btn-icon danger">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FORM MODAL -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingId ? 'Editar Produto' : 'Novo Produto' }}</h2>
+        <button class="btn-close" (click)="closeForm()">✖</button>
+      </div>
+
+      <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="produto-form">
+        <div class="form-grid">
+          <!-- Coluna 1 -->
+          <div class="form-column">
+            <h3>Informações Básicas</h3>
+
+            <div class="form-group">
+              <label>Nome do Produto *</label>
+              <input type="text" formControlName="nome" placeholder="Ex: Mouse Pad RGB">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>SKU</label>
+                <input type="text" formControlName="sku" placeholder="Ex: MOU-001">
+              </div>
+              <div class="form-group">
+                <label>UPC</label>
+                <input type="text" formControlName="upc">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>ASIN</label>
+              <div class="input-with-button">
+                <input type="text" formControlName="asin" placeholder="Ex: B08XYZ">
+                <button type="button" (click)="buscarPorASIN()" class="btn-secondary">
+                  🔍 Buscar
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Categoria</label>
+                <input type="text" formControlName="categoria" placeholder="Ex: Sports & Outdoors">
+              </div>
+              <div class="form-group">
+                <label>Fornecedor</label>
+                <input type="text" formControlName="fornecedor" placeholder="Ex: Alibaba">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Status *</label>
+                <select formControlName="status">
+                  <option value="sourcing">🔍 Pesquisando</option>
+                  <option value="comprado">🟠 Aguardando Aprovação</option>
+                  <option value="em_transito">🟡 Pendente</option>
+                  <option value="no_estoque">✅ Aprovado/Vendendo</option>
+                  <option value="vendido">🟣 Vendido</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Moeda de Compra</label>
+                <select formControlName="moeda_compra">
+                  <option value="USD">USD ($)</option>
+                  <option value="BRL">BRL (R$)</option>
+                  <option value="EUR">EUR (€)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna 2 -->
+          <div class="form-column">
+            <h3>Custos e Precificação</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Custo Base (por unidade)</label>
+                <input type="number" step="0.01" formControlName="custo_base">
+              </div>
+              <div class="form-group">
+                <label>Frete (por unidade)</label>
+                <input type="number" step="0.01" formControlName="freight">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Taxa/Imposto</label>
+                <input type="number" step="0.01" formControlName="tax">
+              </div>
+              <div class="form-group">
+                <label>Prep Fee</label>
+                <input type="number" step="0.01" formControlName="prep">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Preço de Venda (Amazon)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  formControlName="sold_for"
+                  (change)="autoCalcularAmazonFees()">
+              </div>
+              <div class="form-group">
+                <label>Amazon Fees</label>
+                <input type="number" step="0.01" formControlName="amazon_fees">
+              </div>
+            </div>
+
+            <div class="margem-preview">
+              <strong>Margem Estimada:</strong>
+              <span
+                class="margem-value"
+                [class.high]="calcularMargemEstimada() > 40"
+                [class.medium]="calcularMargemEstimada() >= 20 && calcularMargemEstimada() <= 40"
+                [class.low]="calcularMargemEstimada() < 20">
+                {{ calcularMargemEstimada() | number:'1.2-2' }}%
+              </span>
+            </div>
+
+            <h3>Estoque e Datas</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Quantidade Comprada</label>
+                <input type="number" formControlName="quantidade">
+              </div>
+              <div class="form-group">
+                <label>Estoque Atual</label>
+                <input type="number" formControlName="estoque">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Data de Adição</label>
+                <input type="date" formControlName="data_add">
+              </div>
+              <div class="form-group">
+                <label>Data Amazon (Live)</label>
+                <input type="date" formControlName="data_amz">
+              </div>
+            </div>
+
+            <h3>Links</h3>
+
+            <div class="form-group">
+              <label>Link Amazon</label>
+              <input type="url" formControlName="link_amazon" placeholder="https://amazon.com/...">
+            </div>
+
+            <div class="form-group">
+              <label>Link Fornecedor</label>
+              <input type="url" formControlName="link_fornecedor" placeholder="https://...">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" (click)="closeForm()" class="btn-secondary">Cancelar</button>
+          <button type="submit" [disabled]="produtoForm.invalid" class="btn-primary">
+            {{ editingId ? 'Atualizar' : 'Criar' }} Produto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

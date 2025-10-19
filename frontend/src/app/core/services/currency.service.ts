@@ -1,86 +1,77 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { BehaviorSubject, Observable } from 'rxjs';
 
-export interface ExchangeRates {
-  USD: number;
-  BRL: number;
-  EUR: number;
-  updated: Date;
-}
+export type Currency = 'USD' | 'BRL' | 'EUR';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CurrencyService {
-  private apiUrl = environment.apiUrl;
-  private ratesSubject = new BehaviorSubject<ExchangeRates | null>(null);
-  public rates$ = this.ratesSubject.asObservable();
+  private currentCurrency$ = new BehaviorSubject<Currency>('USD');
+  private rates: { USD: number; BRL: number; EUR: number } = {
+    USD: 1,
+    BRL: 5.20,
+    EUR: 0.92
+  };
 
-  constructor(private http: HttpClient) {
-    this.loadRates();
-  }
-
-  /**
-   * Carregar taxas de câmbio
-   */
-  private loadRates() {
-    this.http.get<ExchangeRates>(`${this.apiUrl}/currency/rates`)
-      .subscribe(
-        rates => this.ratesSubject.next(rates),
-        error => console.error('Erro ao carregar taxas:', error)
-      );
-  }
-
-  /**
-   * Obter taxas atuais
-   */
-  getRates(): Observable<ExchangeRates> {
-    return this.http.get<ExchangeRates>(`${this.apiUrl}/currency/rates`);
-  }
-
-  /**
-   * Converter valor entre moedas
-   */
-  convert(amount: number, from: string, to: string): number {
-    const rates = this.ratesSubject.value;
-    if (!rates || from === to) return amount;
-
-    // Converter para USD primeiro
-    let amountInUSD = amount;
-    if (from === 'BRL') {
-      amountInUSD = amount / rates.BRL;
-    } else if (from === 'EUR') {
-      amountInUSD = amount / rates.EUR;
+  constructor() {
+    // Load saved currency preference
+    const saved = localStorage.getItem('preferredCurrency') as Currency;
+    if (saved) {
+      this.currentCurrency$.next(saved);
     }
-
-    // Converter de USD para moeda destino
-    if (to === 'BRL') {
-      return amountInUSD * rates.BRL;
-    } else if (to === 'EUR') {
-      return amountInUSD * rates.EUR;
-    }
-
-    return amountInUSD;
   }
 
-  /**
-   * Formatar valor com símbolo de moeda
-   */
-  format(value: number, currency: string): string {
-    const symbols: any = {
-      'USD': '$',
-      'BRL': 'R$',
-      'EUR': '€'
+  getCurrentCurrency(): Observable<Currency> {
+    return this.currentCurrency$.asObservable();
+  }
+
+  getCurrentCurrencyValue(): Currency {
+    return this.currentCurrency$.value;
+  }
+
+  setCurrency(currency: Currency): void {
+    this.currentCurrency$.next(currency);
+    localStorage.setItem('preferredCurrency', currency);
+  }
+
+  setRates(rates: { USD: number; BRL: number; EUR: number }): void {
+    this.rates = rates;
+  }
+
+  convert(amount: number, from: Currency, to: Currency): number {
+    if (from === to) return amount;
+
+    // Convert to USD first
+    const amountInUSD = amount / this.rates[from];
+
+    // Convert to target currency
+    return amountInUSD * this.rates[to];
+  }
+
+  format(amount: number, currency: Currency): string {
+    const locale = currency === 'BRL' ? 'pt-BR' : 'en-US';
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  }
+
+  getCurrencySymbol(currency: Currency): string {
+    const symbols: Record<Currency, string> = {
+      USD: '$',
+      BRL: 'R$',
+      EUR: '€'
     };
+    return symbols[currency];
+  }
 
-    const formatted = value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-
-    return `${symbols[currency] || ''} ${formatted}`;
+  getCurrencyColor(currency: Currency): string {
+    const colors: Record<Currency, string> = {
+      USD: '#3B82F6', // Blue
+      BRL: '#10B981', // Green
+      EUR: '#F59E0B'  // Orange
+    };
+    return colors[currency];
   }
 }

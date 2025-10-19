@@ -1,0 +1,39 @@
+<div class="kanban-board">
+  <div class="kanban-columns">
+    <div *ngFor="let column of columns" class="kanban-column" [style.border-color]="column.color">
+      <div class="column-header" [style.background-color]="column.color">
+        <h3>{{ column.title }}</h3>
+        <span class="item-count">{{ column.items.length }}</span>
+      </div>
+
+      <div
+        cdkDropList
+        [id]="column.id"
+        [cdkDropListData]="column.items"
+        [cdkDropListConnectedTo]="getConnectedLists()"
+        (cdkDropListDropped)="drop($event, column.id, column.id)"
+        class="column-content"
+      >
+        <div
+          *ngFor="let item of column.items"
+          cdkDrag
+          class="kanban-card"
+          (click)="onCardClick(item)"
+        >
+          <!-- Use ng-template for custom card content -->
+          <ng-container *ngIf="cardTemplate">
+            <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: item }"></ng-container>
+          </ng-container>
+
+          <!-- Default card content if no template provided -->
+          <div *ngIf="!cardTemplate" class="default-card">
+            <p>{{ item.nome || item.title || 'Item' }}</p>
+          </div>
+
+          <!-- Drag placeholder -->
+          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

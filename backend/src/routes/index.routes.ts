@@ -1,39 +1,20 @@
 import { Router } from 'express';
 import gastosRoutes from './gastos.routes';
-import investimentosRoutes from './investimentos.routes';
-import produtosRoutes from './produtos.routes';
-import receitasRoutes from './receitas.routes';
+import receitasRoutes from './receitas.routes';  // NOVO
+import produtosRoutes from './produtos.routes';  // NOVO
+import investimentosRoutes from './investimentos.routes';  // NOVO
 import amazonRoutes from './amazon.routes';
 import metricsRoutes from './metrics.routes';
-import currencyRoutes from './currency.routes'; // ⭐ NOVO
+import currencyRoutes from './currency.routes';
 
 const router = Router();
 
-// Rotas principais
 router.use('/gastos', gastosRoutes);
-router.use('/investimentos', investimentosRoutes);
-router.use('/produtos', produtosRoutes);
-router.use('/receitas', receitasRoutes);
+router.use('/receitas', receitasRoutes);  // NOVO
+router.use('/produtos', produtosRoutes);  // NOVO
+router.use('/investimentos', investimentosRoutes);  // NOVO
 router.use('/amazon', amazonRoutes);
 router.use('/metrics', metricsRoutes);
-router.use('/currency', currencyRoutes); // ⭐ NOVO
-
-// Rota de informações da API
-router.get('/', (req, res) => {
-  res.json({
-    name: 'Qota Finance API',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: {
-      gastos: '/api/gastos',
-      investimentos: '/api/investimentos',
-      produtos: '/api/produtos',
-      receitas: '/api/receitas',
-      amazon: '/api/amazon',
-      metrics: '/api/metrics',
-      currency: '/api/currency' // ⭐ NOVO
-    }
-  });
-});
+router.use('/currency', currencyRoutes);
 
 export default router;
