@@ -1,4 +1,4 @@
-import pool from '../database/database';
+import { pool } from '../config/database';
 import { CompanyInfo } from '../models/company-info.model';
 
 export class CompanyInfoService {

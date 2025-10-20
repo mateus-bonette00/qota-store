@@ -11,10 +11,9 @@ interface Gasto {
   data: string;
   categoria: string;
   descricao: string;
-  valor: number;
-  moeda: string;
-  valor_brl: number;
   valor_usd: number;
+  valor_brl: number;
+  valor_eur: number;
   metodo: string;
   conta: string;
   quem: string;
@@ -56,8 +55,6 @@ export class DespesasComponent implements OnInit {
     'Outros'
   ];
 
-  moedas: Currency[] = ['BRL', 'USD', 'EUR'];
-
   metodos = [
     'Pix',
     'Cartão de Crédito',
@@ -93,8 +90,9 @@ export class DespesasComponent implements OnInit {
       data: [now.toISOString().split('T')[0], Validators.required],
       categoria: ['Compra de Produto', Validators.required],
       descricao: [''],
-      valor: [0, [Validators.required, Validators.min(0)]],
-      moeda: ['BRL', Validators.required],
+      valor_usd: [null, [Validators.min(0)]],
+      valor_brl: [null, [Validators.min(0)]],
+      valor_eur: [null, [Validators.min(0)]],
       metodo: ['Pix'],
       conta: ['Nubank'],
       quem: ['Bonette']
@@ -154,11 +152,12 @@ export class DespesasComponent implements OnInit {
       this.gastoForm.reset({
         data: new Date().toISOString().split('T')[0],
         categoria: 'Compra de Produto',
-        moeda: 'BRL',
+        valor_usd: null,
+        valor_brl: null,
+        valor_eur: null,
         metodo: 'Pix',
         conta: 'Nubank',
-        quem: 'Bonette',
-        valor: 0
+        quem: 'Bonette'
       });
       this.loadData();
     } catch (error) {
@@ -251,8 +250,13 @@ export class DespesasComponent implements OnInit {
 
   formatDate(date: string): string {
     if (!date) return '';
-    const d = new Date(date + 'T00:00:00');
-    return d.toLocaleDateString('pt-BR');
+    // Handle both YYYY-MM-DD and DD/MM/YYYY formats
+    const dateStr = String(date).split('T')[0]; // Remove time if present
+    const [year, month, day] = dateStr.split('-');
+    if (year && month && day) {
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+    return dateStr;
   }
 
   getTotalProduto(p: any): number {

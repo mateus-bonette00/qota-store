@@ -1,4 +1,91 @@
-<div class="page-placeholder">
-  <h2 class="page-title">Gráficos</h2>
-  <p class="page-subtitle">Em desenvolvimento...</p>
+<div class="graficos-page">
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="month">Mês:</label>
+      <select id="month" [(ngModel)]="selectedMonth" (change)="onMonthChange()">
+        <option value="01">Janeiro</option>
+        <option value="02">Fevereiro</option>
+        <option value="03">Março</option>
+        <option value="04">Abril</option>
+        <option value="05">Maio</option>
+        <option value="06">Junho</option>
+        <option value="07">Julho</option>
+        <option value="08">Agosto</option>
+        <option value="09">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="year">Ano:</label>
+      <select id="year" [(ngModel)]="selectedYear" (change)="onMonthChange()">
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Gráficos principais -->
+  <div class="charts-main">
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="receitasDespesasChartData"
+              [options]="receitasDespesasChartOptions"
+              type="line">
+      </canvas>
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="resultadoMesChartData"
+              [options]="resultadoMesChartOptions"
+              type="bar">
+      </canvas>
+    </div>
+  </div>
+
+  <!-- Gráficos de produtos - Mês -->
+  <h3 class="section-title">Produtos mais/menos vendidos (Mês)</h3>
+  <div class="charts-grid">
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="topProdutosMesChartData"
+              [options]="topProdutosMesChartOptions"
+              type="bar">
+      </canvas>
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="bottomProdutosMesChartData"
+              [options]="bottomProdutosMesChartOptions"
+              type="bar">
+      </canvas>
+    </div>
+  </div>
+
+  <!-- Gráficos de produtos - Ano -->
+  <h3 class="section-title">Produtos mais/menos vendidos (Ano)</h3>
+  <div class="charts-grid">
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="topProdutosAnoChartData"
+              [options]="topProdutosAnoChartOptions"
+              type="bar">
+      </canvas>
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [data]="bottomProdutosAnoChartData"
+              [options]="bottomProdutosAnoChartOptions"
+              type="bar">
+      </canvas>
+    </div>
+  </div>
 </div>

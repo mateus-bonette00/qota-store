@@ -13,11 +13,14 @@ export class HeaderComponent {
   years: number[] = [];
 
   navItems = [
-    { route: '/dashboard', label: 'Principal', icon: '📊' },
-    { route: '/receitas', label: 'Receitas (FBA)', icon: '💰' },
-    { route: '/graficos', label: 'Gráficos', icon: '📈' },
-    { route: '/despesas', label: 'Despesas', icon: '💳' },
-    { route: '/produtos', label: 'Produtos', icon: '📦' }
+    { route: '/dashboard', label: 'Principal', icon: 'home' },
+    { route: '/receitas', label: 'Receitas', icon: 'dollar-sign' },
+    { route: '/graficos', label: 'Gráficos', icon: 'trending-up' },
+    { route: '/despesas', label: 'Despesas', icon: 'credit-card' },
+    { route: '/produtos', label: 'Produtos', icon: 'package' },
+    { route: '/senhas', label: 'Senhas', icon: 'lock' },
+    { route: '/senhas-fornecedores', label: 'Senhas Fornec.', icon: 'key' },
+    { route: '/informacoes-empresa', label: 'Info Empresa', icon: 'building-2' }
   ];
 
   constructor() {

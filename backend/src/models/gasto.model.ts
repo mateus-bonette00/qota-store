@@ -3,10 +3,9 @@ export interface Gasto {
   data: string;
   categoria: string;
   descricao?: string;
-  valor: number;           // ⭐ NOVO: valor na moeda original
-  moeda: 'BRL' | 'USD' | 'EUR';  // ⭐ NOVO
-  valor_brl: number;       // convertido
-  valor_usd: number;       // convertido
+  valor_usd: number;       // valor em USD
+  valor_brl: number;       // valor em BRL
+  valor_eur: number;       // valor em EUR
   metodo?: string;
   conta?: string;
   quem?: string;
@@ -16,8 +15,9 @@ export interface CreateGastoDto {
   data: string;
   categoria: string;
   descricao?: string;
-  valor: number;           // ⭐ NOVO
-  moeda: 'BRL' | 'USD' | 'EUR';  // ⭐ NOVO
+  valor_usd: number;
+  valor_brl: number;
+  valor_eur: number;
   metodo?: string;
   conta?: string;
   quem?: string;
@@ -27,8 +27,9 @@ export interface UpdateGastoDto {
   data?: string;
   categoria?: string;
   descricao?: string;
-  valor?: number;
-  moeda?: 'BRL' | 'USD' | 'EUR';
+  valor_usd?: number;
+  valor_brl?: number;
+  valor_eur?: number;
   metodo?: string;
   conta?: string;
   quem?: string;

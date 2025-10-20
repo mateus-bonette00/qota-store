@@ -1,92 +1,185 @@
-/* Cores usadas neste componente */
-$primary: #2F529E;
-$accent:  #FE0000;
-$bg-1:    #0a122b;
-$bg-2:    #0d1735;
-
-/* Grays (paleta próxima ao Tailwind) */
-$gray-700: #374151;
-$gray-600: #4b5563;
-$gray-800: #1f2937;
-$gray-400: #9ca3af;
-
-.header {
-  background-color: $bg-2;
-  border-bottom: 1px solid $gray-700;
-  padding: 1rem 1.5rem; /* py-4 px-6 */
+.modern-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
 }
 
 .header-container {
-  max-width: 80rem;     /* max-w-7xl (1280px) */
-  margin-left: auto;
-  margin-right: auto;   /* mx-auto */
-}
-
-.header-title-wrapper {
-  text-align: center;
-  margin-bottom: 1rem;  /* mb-4 */
-}
-
-.header-title {
-  font-size: 2.25rem;   /* text-4xl */
-  line-height: 2.5rem;
-  font-weight: 900;     /* font-black */
-  color: $primary;
-  filter: saturate(1.25) contrast(3.45);
-}
-
-.header-filters {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;            /* gap-4 */
-  margin-bottom: 1rem;  /* mb-4 */
-}
-
-.filter-label {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
-  gap: .5rem;           /* gap-2 */
-  font-weight: 700;     /* font-bold */
-}
-
-.filter-select {
-  background-color: $gray-800;
-  border: 1px solid $gray-600;
-  border-radius: .5rem; /* rounded-lg */
-  padding: .5rem .75rem;/* py-2 px-3 */
-  color: #fff;
-}
-
-.header-nav {
-  display: flex;
-  justify-content: center;
-  gap: .75rem;          /* gap-3 */
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
-.nav-link {
+// Brand/Logo
+.brand {
   display: flex;
   align-items: center;
-  gap: .5rem;           /* gap-2 */
-  padding: .75rem 1rem; /* py-3 px-4 */
-  background-color: $gray-800;
-  border: 1px solid $gray-600;
-  border-radius: .75rem;/* rounded-xl */
-  font-weight: 700;     /* font-bold */
-  transition: all .2s ease;
+  gap: 1rem;
 
-  &:hover {
-    filter: brightness(1.1);
+  .logo {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
   }
 
-  &.active {
-    background-color: $accent;
-    border-color: rgba(255, 255, 255, 0.28);
+  .brand-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
   }
 }
 
-.nav-icon {
-  font-size: 1.25rem;   /* text-xl */
-  line-height: 1.75rem;
+// Navigation Menu
+.nav-menu {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  flex-wrap: wrap;
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+
+    lucide-icon {
+      opacity: 0.9;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &.active {
+      background: white;
+      color: #667eea;
+      border-color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+
+      lucide-icon {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+// Filters
+.header-filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: auto;
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+
+    lucide-icon {
+      color: white;
+      opacity: 0.9;
+    }
+
+    .filter-select {
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      padding: 0.25rem;
+
+      option {
+        background: #667eea;
+        color: white;
+      }
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .header-container {
+    gap: 1rem;
+  }
+
+  .nav-menu {
+    order: 3;
+    width: 100%;
+  }
+
+  .header-filters {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 1rem;
+  }
+
+  .brand {
+    .logo {
+      height: 35px;
+    }
+
+    .brand-text {
+      font-size: 1.25rem;
+    }
+  }
+
+  .nav-menu {
+    .nav-item {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+
+      span {
+        display: none;
+      }
+
+      lucide-icon {
+        margin: 0;
+      }
+    }
+  }
+
+  .header-filters {
+    width: 100%;
+    justify-content: center;
+
+    .filter-group {
+      flex: 1;
+      justify-content: center;
+    }
+  }
 }

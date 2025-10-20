@@ -1,7 +1,9 @@
 <div class="dashboard">
   <!-- Saldo Amazon com botão de refresh -->
   <div class="amazon-balance-card">
-    <div class="amazon-icon">🛒</div>
+    <div class="amazon-icon">
+      <lucide-icon name="shopping-cart" [size]="32"></lucide-icon>
+    </div>
     <div class="amazon-content">
       <div class="amazon-label">
         SALDO AMAZON (DISPONÍVEL) — USD
@@ -14,15 +16,22 @@
           class="btn-refresh"
           (click)="refreshSaldoAmazon()"
           [disabled]="refreshingSaldo">
-          <span *ngIf="!refreshingSaldo">🔄 Atualizar da API</span>
-          <span *ngIf="refreshingSaldo">⏳ Atualizando...</span>
+          <span *ngIf="!refreshingSaldo">
+            <lucide-icon name="refresh-cw" [size]="16"></lucide-icon>
+            Atualizar da API
+          </span>
+          <span *ngIf="refreshingSaldo">
+            <lucide-icon name="activity" [size]="16"></lucide-icon>
+            Atualizando...
+          </span>
         </button>
 
         <button
           class="btn-sync"
           (click)="syncAmazonOrders()"
           [disabled]="loading">
-          📥 Sincronizar Vendas
+          <lucide-icon name="download" [size]="16"></lucide-icon>
+          Sincronizar Vendas
         </button>
       </div>
     </div>
@@ -30,10 +39,14 @@
 
   <!-- Auto-refresh info -->
   <div class="auto-refresh-bar" *ngIf="autoRefreshEnabled">
-    <span>🔄 Auto-atualização ativa</span>
+    <span>
+      <lucide-icon name="refresh-cw" [size]="16"></lucide-icon>
+      Auto-atualização ativa
+    </span>
     <span class="countdown">Próxima em: {{ formatTime(nextRefreshIn) }}</span>
     <button class="btn-toggle" (click)="toggleAutoRefresh()">
-      {{ autoRefreshEnabled ? '⏸️ Pausar' : '▶️ Ativar' }}
+      <lucide-icon [name]="autoRefreshEnabled ? 'x' : 'check-circle'" [size]="16"></lucide-icon>
+      {{ autoRefreshEnabled ? 'Pausar' : 'Ativar' }}
     </button>
   </div>
 
@@ -46,7 +59,9 @@
     <!-- Receitas -->
     <div class="kpi-card receita">
       <div class="kpi-content">
-        <div class="kpi-icon">📈</div>
+        <div class="kpi-icon">
+          <lucide-icon name="trending-up" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Receitas (mês)</div>
           <div class="kpi-value-usd green">USD: {{ formatUSD(resumoMes?.recUSD) }}</div>
@@ -58,7 +73,9 @@
     <!-- Despesas -->
     <div class="kpi-card despesa">
       <div class="kpi-content">
-        <div class="kpi-icon">📉</div>
+        <div class="kpi-icon">
+          <lucide-icon name="trending-down" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Despesas (mês)</div>
           <div class="kpi-value-usd red">USD: {{ formatUSD(resumoMes?.despUSD) }}</div>
@@ -70,7 +87,9 @@
     <!-- Resultado -->
     <div class="kpi-card resultado">
       <div class="kpi-content">
-        <div class="kpi-icon">💰</div>
+        <div class="kpi-icon">
+          <lucide-icon name="dollar-sign" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Resultado (mês)</div>
           <div class="kpi-value-usd" [ngClass]="getResultClass(resultadoMesUSD)">
@@ -94,7 +113,9 @@
   <div class="kpi-grid">
     <div class="kpi-card receita">
       <div class="kpi-content">
-        <div class="kpi-icon">📊</div>
+        <div class="kpi-icon">
+          <lucide-icon name="bar-chart-3" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Receitas (total)</div>
           <div class="kpi-value-usd green">USD: {{ formatUSD(totais?.recUSD) }}</div>
@@ -105,7 +126,9 @@
 
     <div class="kpi-card despesa">
       <div class="kpi-content">
-        <div class="kpi-icon">💸</div>
+        <div class="kpi-icon">
+          <lucide-icon name="trending-down" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Despesas (total)</div>
           <div class="kpi-value-usd red">USD: {{ formatUSD(totais?.despUSD) }}</div>
@@ -116,7 +139,9 @@
 
     <div class="kpi-card resultado">
       <div class="kpi-content">
-        <div class="kpi-icon">🎯</div>
+        <div class="kpi-icon">
+          <lucide-icon name="target" [size]="28"></lucide-icon>
+        </div>
         <div>
           <div class="kpi-label">Resultado (total)</div>
           <div class="kpi-value-usd" [ngClass]="getResultClass(resultadoTotalUSD)">
@@ -137,7 +162,9 @@
 
   <div class="lucros-grid">
     <div class="lucro-card">
-      <div class="lucro-icon">📈</div>
+      <div class="lucro-icon">
+        <lucide-icon name="trending-up" [size]="28"></lucide-icon>
+      </div>
       <div>
         <div class="lucro-label">
           Lucro realizado no período — {{ getMonthLabel(currentMonth) }}
@@ -149,7 +176,9 @@
     </div>
 
     <div class="lucro-card">
-      <div class="lucro-icon">💎</div>
+      <div class="lucro-icon">
+        <lucide-icon name="zap" [size]="28"></lucide-icon>
+      </div>
       <div>
         <div class="lucro-label">
           Lucro TOTAL — soma de todos os meses

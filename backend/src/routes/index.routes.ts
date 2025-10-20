@@ -9,6 +9,8 @@ import currencyRoutes from './currency.routes';
 import fornecedoresRoutes from './fornecedores.routes';
 import companyInfoRoutes from './company-info.routes';
 import sistemasExternosRoutes from './sistemas-externos.routes';
+import senhasRoutes from './senhas.routes';
+import senhasFornecedoresRoutes from './senhas-fornecedores.routes';
 
 const router = Router();
 
@@ -22,5 +24,7 @@ router.use('/currency', currencyRoutes);
 router.use('/fornecedores', fornecedoresRoutes);
 router.use('/company-info', companyInfoRoutes);
 router.use('/sistemas-externos', sistemasExternosRoutes);
+router.use('/senhas', senhasRoutes);
+router.use('/senhas-fornecedores', senhasFornecedoresRoutes);
 
 export default router;

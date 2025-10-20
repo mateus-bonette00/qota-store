@@ -1,0 +1,187 @@
+<div class="senhas-page">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Senhas de Sistemas</h1>
+
+    <div class="header-actions">
+      <button class="btn-primary" (click)="showForm = true">
+        <lucide-icon name="plus" [size]="18"></lucide-icon>
+        Nova Senha
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <input
+      type="text"
+      placeholder="Buscar por sistema, URL ou email..."
+      [(ngModel)]="searchTerm"
+      class="search-input"
+    />
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Carregando senhas...</p>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div *ngIf="!loading" class="table-container">
+    <table class="senhas-table">
+      <thead>
+        <tr>
+          <th>Nome do Sistema</th>
+          <th>URL</th>
+          <th>Usuário / E-mail</th>
+          <th>Senha</th>
+          <th>Observações</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let senha of filteredSenhas">
+          <td>
+            <strong>{{ senha.nome_sistema }}</strong>
+          </td>
+          <td>
+            <a *ngIf="senha.url" [href]="senha.url" target="_blank" class="link">
+              {{ senha.url }}
+            </a>
+            <span *ngIf="!senha.url">-</span>
+          </td>
+          <td>
+            <span>{{ senha.usuario_email || "-" }}</span>
+            <button
+              *ngIf="senha.usuario_email"
+              (click)="copyToClipboard(senha.usuario_email!, 'Usuário/Email')"
+              class="btn-copy"
+              title="Copiar"
+            >
+              <lucide-icon name="copy" [size]="16"></lucide-icon>
+            </button>
+          </td>
+          <td>
+            <div class="password-field">
+              <span *ngIf="!showPassword[senha.id!]">••••••••</span>
+              <span *ngIf="showPassword[senha.id!]">{{ senha.senha || "-" }}</span>
+              <button
+                *ngIf="senha.senha"
+                (click)="togglePasswordVisibility(senha.id!)"
+                class="btn-toggle"
+                title="Mostrar/Ocultar"
+              >
+                <lucide-icon [name]="showPassword[senha.id!] ? 'eye-off' : 'eye'" [size]="16"></lucide-icon>
+              </button>
+              <button
+                *ngIf="senha.senha"
+                (click)="copyToClipboard(senha.senha!, 'Senha')"
+                class="btn-copy"
+                title="Copiar"
+              >
+                <lucide-icon name="copy" [size]="16"></lucide-icon>
+              </button>
+            </div>
+          </td>
+          <td>{{ senha.observacoes || "-" }}</td>
+          <td>
+            <button (click)="onSenhaClicked(senha)" class="btn-icon">
+              <lucide-icon name="edit" [size]="18"></lucide-icon>
+            </button>
+            <button
+              (click)="deleteSenha(senha.id!)"
+              class="btn-icon danger"
+            >
+              <lucide-icon name="trash-2" [size]="18"></lucide-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="filteredSenhas.length === 0" class="no-data">
+      <p>Nenhuma senha encontrada.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingId ? 'Editar' : 'Nova' }} Senha</h2>
+      <button class="btn-close" (click)="closeForm()">
+        <lucide-icon name="x" [size]="20"></lucide-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="senhaForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <!-- Nome do Sistema -->
+        <div class="form-group full-width">
+          <label>Nome do Sistema *</label>
+          <input
+            type="text"
+            formControlName="nome_sistema"
+            placeholder="Ex: Amazon Seller Central"
+            required
+          />
+        </div>
+
+        <!-- URL -->
+        <div class="form-group full-width">
+          <label>URL</label>
+          <input
+            type="url"
+            formControlName="url"
+            placeholder="https://exemplo.com"
+          />
+        </div>
+
+        <!-- Usuário / E-mail -->
+        <div class="form-group full-width">
+          <label>Usuário / E-mail</label>
+          <input
+            type="text"
+            formControlName="usuario_email"
+            placeholder="usuario@exemplo.com"
+          />
+        </div>
+
+        <!-- Senha -->
+        <div class="form-group full-width">
+          <label>Senha</label>
+          <input
+            type="text"
+            formControlName="senha"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <!-- Observações -->
+        <div class="form-group full-width">
+          <label>Observações</label>
+          <textarea
+            formControlName="observacoes"
+            rows="3"
+            placeholder="Notas adicionais..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeForm()">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="senhaForm.invalid"
+        >
+          {{ editingId ? 'Atualizar' : 'Criar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

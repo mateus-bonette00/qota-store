@@ -1,0 +1,86 @@
+<div class="info-page">
+  <div class="page-header">
+    <h1>Informações da Empresa</h1>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="toggleEdit()">
+        {{ editing ? 'Cancelar' : 'Editar' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Carregando informações...</p>
+  </div>
+
+  <div *ngIf="!loading" class="info-container">
+    <form [formGroup]="infoForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nome da Empresa *</label>
+          <input type="text" formControlName="nome_empresa" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group">
+          <label>EIN</label>
+          <div class="input-with-copy">
+            <input type="text" formControlName="ein" [disabled]="!editing" />
+            <button type="button" *ngIf="!editing && infoForm.value.ein" (click)="copyToClipboard(infoForm.value.ein, 'EIN')" class="btn-copy">
+              <lucide-icon name="copy" [size]="16"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Endereço da Empresa</label>
+          <textarea formControlName="endereco" [disabled]="!editing" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Telefone da Empresa</label>
+          <input type="text" formControlName="telefone" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group">
+          <label>Email Coporativo</label>
+          <input type="email" formControlName="email_corporativo" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group full-width">
+          <label>Nome Do Daniel</label>
+          <input type="text" formControlName="nome_daniel" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group full-width">
+          <label>Endereço de Envio do Produto (Prep Center)</label>
+          <textarea formControlName="endereco_envio_prep" [disabled]="!editing" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Nome no Cartão (mercury)</label>
+          <input type="text" formControlName="nome_cartao_mercury" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group">
+          <label>Número do Cartão</label>
+          <input type="text" formControlName="numero_cartao_mercury" [disabled]="!editing" />
+        </div>
+
+        <div class="form-group">
+          <label>Data de Vencimento</label>
+          <input type="text" formControlName="data_vencimento_cartao" [disabled]="!editing" placeholder="MM/YY" />
+        </div>
+
+        <div class="form-group">
+          <label>CVC</label>
+          <input type="text" formControlName="cvc_cartao" [disabled]="!editing" />
+        </div>
+      </div>
+
+      <div *ngIf="editing" class="form-actions">
+        <button type="button" class="btn-secondary" (click)="toggleEdit()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="infoForm.invalid || loading">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>

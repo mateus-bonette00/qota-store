@@ -35,22 +35,28 @@ export const validateMonthQuery: RequestHandler = (req: Request, res: Response, 
 export const validateCreateGasto: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   const body = req.body ?? {};
 
-  const description = body.description ?? body.descricao;
-  const amount = body.amount ?? body.valor;
   const date = body.date ?? body.data;
   const category = body.category ?? body.categoria;
 
-  if (!description || typeof description !== 'string') {
-    return void res.status(400).json({ error: 'description é obrigatório (string).' });
-  }
-  if (!Number.isFinite(Number(amount))) {
-    return void res.status(400).json({ error: 'amount/valor é obrigatório (número).' });
-  }
+  // Data é obrigatória
   if (!date || isNaN(Date.parse(String(date)))) {
     return void res.status(400).json({ error: 'date/data é obrigatório (ISO válido).' });
   }
+
+  // Categoria é obrigatória
   if (!category || typeof category !== 'string') {
     return void res.status(400).json({ error: 'category/categoria é obrigatório (string).' });
+  }
+
+  // Valores de moeda são opcionais, mas se fornecidos devem ser números válidos
+  if (body.valor_usd != null && body.valor_usd !== '' && !Number.isFinite(Number(body.valor_usd))) {
+    return void res.status(400).json({ error: 'valor_usd deve ser um número válido.' });
+  }
+  if (body.valor_brl != null && body.valor_brl !== '' && !Number.isFinite(Number(body.valor_brl))) {
+    return void res.status(400).json({ error: 'valor_brl deve ser um número válido.' });
+  }
+  if (body.valor_eur != null && body.valor_eur !== '' && !Number.isFinite(Number(body.valor_eur))) {
+    return void res.status(400).json({ error: 'valor_eur deve ser um número válido.' });
   }
 
   return void next();
@@ -62,7 +68,13 @@ export const validateCreateGasto: RequestHandler = (req: Request, res: Response,
  */
 export const validateUpdateGasto: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   const body = req.body ?? {};
-  const allowed = ['description', 'descricao', 'amount', 'valor', 'date', 'data', 'category', 'categoria'];
+  const allowed = [
+    'description', 'descricao',
+    'valor_usd', 'valor_brl', 'valor_eur',
+    'date', 'data',
+    'category', 'categoria',
+    'metodo', 'conta', 'quem'
+  ];
 
   if (Object.keys(body).length === 0) {
     return void res.status(400).json({ error: 'Body vazio. Informe ao menos um campo para atualizar.' });
@@ -79,11 +91,14 @@ export const validateUpdateGasto: RequestHandler = (req: Request, res: Response,
   if (body.descricao != null && typeof body.descricao !== 'string') {
     return void res.status(400).json({ error: 'descricao deve ser string.' });
   }
-  if (body.amount != null && !Number.isFinite(Number(body.amount))) {
-    return void res.status(400).json({ error: 'amount deve ser número.' });
+  if (body.valor_usd != null && body.valor_usd !== '' && !Number.isFinite(Number(body.valor_usd))) {
+    return void res.status(400).json({ error: 'valor_usd deve ser número.' });
   }
-  if (body.valor != null && !Number.isFinite(Number(body.valor))) {
-    return void res.status(400).json({ error: 'valor deve ser número.' });
+  if (body.valor_brl != null && body.valor_brl !== '' && !Number.isFinite(Number(body.valor_brl))) {
+    return void res.status(400).json({ error: 'valor_brl deve ser número.' });
+  }
+  if (body.valor_eur != null && body.valor_eur !== '' && !Number.isFinite(Number(body.valor_eur))) {
+    return void res.status(400).json({ error: 'valor_eur deve ser número.' });
   }
   if (body.date != null && isNaN(Date.parse(String(body.date)))) {
     return void res.status(400).json({ error: 'date inválido (ISO).' });

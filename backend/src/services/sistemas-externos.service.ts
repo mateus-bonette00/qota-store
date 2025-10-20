@@ -1,4 +1,4 @@
-import pool from '../database/database';
+import { pool } from '../config/database';
 import { SistemaExterno } from '../models/sistema-externo.model';
 
 export class SistemasExternosService {

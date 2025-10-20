@@ -1,27 +1,12 @@
 <div class="produtos-page">
   <!-- Header -->
   <div class="page-header">
-    <h1>📦 Gestão de Produtos FBA</h1>
+    <h1>Cadastro e Métricas por Produto (FBA)</h1>
 
     <div class="header-actions">
-      <!-- View Toggle -->
-      <div class="view-toggle">
-        <button
-          [class.active]="viewMode === 'kanban'"
-          (click)="switchView('kanban')"
-        >
-          📋 Kanban
-        </button>
-        <button
-          [class.active]="viewMode === 'table'"
-          (click)="switchView('table')"
-        >
-          📊 Tabela
-        </button>
-      </div>
-
       <button class="btn-primary" (click)="showForm = true">
-        ➕ Novo Produto
+        <lucide-icon name="plus" [size]="18"></lucide-icon>
+        Novo Produto
       </button>
     </div>
   </div>
@@ -30,17 +15,18 @@
   <div class="filters">
     <input
       type="text"
-      placeholder="🔍 Buscar por nome, SKU ou ASIN..."
+      placeholder="Buscar por nome, SKU ou ASIN..."
       [(ngModel)]="searchTerm"
+      (ngModelChange)="loadTableData()"
       class="search-input"
     />
 
-    <select [(ngModel)]="selectedCategoria" class="filter-select">
+    <select [(ngModel)]="selectedCategoria" (change)="loadTableData()" class="filter-select">
       <option value="">Todas as categorias</option>
       <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
     </select>
 
-    <select [(ngModel)]="selectedFornecedor" class="filter-select">
+    <select [(ngModel)]="selectedFornecedor" (change)="loadTableData()" class="filter-select">
       <option value="">Todos os fornecedores</option>
       <option *ngFor="let forn of fornecedores" [value]="forn">
         {{ forn }}
@@ -54,93 +40,8 @@
     <p>Carregando produtos...</p>
   </div>
 
-  <!-- KANBAN VIEW -->
-  <div *ngIf="viewMode === 'kanban' && !loading" class="kanban-container">
-    <app-kanban-board
-      [columns]="kanbanColumns"
-      [cardTemplate]="productCardTemplate"
-      (cardMoved)="onProductMoved($event)"
-      (cardClicked)="onProductClicked($event)"
-    ></app-kanban-board>
-
-    <!-- Template for product card -->
-    <ng-template #productCardTemplate let-product>
-      <div class="product-card">
-        <div class="card-header">
-          <h4>{{ product.nome }}</h4>
-          <span
-            class="badge-margin"
-            [class.high]="product.margem_percentual > 40"
-          >
-            {{ product.margem_percentual | number : "1.1-1" }}%
-          </span>
-        </div>
-
-        <div class="card-body">
-          <div class="info-row">
-            <span class="label">SKU:</span>
-            <span class="value">{{ product.sku || "-" }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">ASIN:</span>
-            <span class="value">{{ product.asin || "-" }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Estoque:</span>
-            <span class="value">{{ product.estoque }} un</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Fornecedor:</span>
-            <span class="value">{{ product.fornecedor || "-" }}</span>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="price-info">
-            <div>
-              <small>Custo</small>
-              <strong>${{ product.custo_total | number : "1.2-2" }}</strong>
-            </div>
-            <div>
-              <small>Venda</small>
-              <strong>${{ product.sold_for | number : "1.2-2" }}</strong>
-            </div>
-            <div>
-              <small>Lucro</small>
-              <strong class="profit"
-                >${{ product.lucro_unitario | number : "1.2-2" }}</strong
-              >
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="card-links"
-          *ngIf="product.link_amazon || product.link_fornecedor"
-        >
-          <a
-            *ngIf="product.link_amazon"
-            [href]="product.link_amazon"
-            target="_blank"
-            class="link-btn"
-          >
-            🔗 Amazon
-          </a>
-          <a
-            *ngIf="product.link_fornecedor"
-            [href]="product.link_fornecedor"
-            target="_blank"
-            class="link-btn"
-          >
-            🔗 Fornecedor
-          </a>
-        </div>
-      </div>
-    </ng-template>
-  </div>
-
   <!-- TABLE VIEW -->
-  <div *ngIf="viewMode === 'table' && !loading" class="table-container">
+  <div *ngIf="!loading" class="table-container">
     <table class="produtos-table">
       <thead>
         <tr>
@@ -192,13 +93,13 @@
           </td>
           <td>
             <button (click)="onProductClicked(produto)" class="btn-icon">
-              ✏️
+              <lucide-icon name="edit" [size]="18"></lucide-icon>
             </button>
             <button
               (click)="deleteProduto(produto.id!)"
               class="btn-icon danger"
             >
-              🗑️
+              <lucide-icon name="trash-2" [size]="18"></lucide-icon>
             </button>
           </td>
         </tr>
@@ -211,7 +112,9 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>{{ editingId ? "Editar Produto" : "Novo Produto" }}</h2>
-        <button class="btn-close" (click)="closeForm()">✖</button>
+        <button class="btn-close" (click)="closeForm()">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
+        </button>
       </div>
 
       <form
@@ -261,7 +164,8 @@
                   (click)="buscarPorASIN()"
                   class="btn-secondary"
                 >
-                  🔍 Buscar
+                  <lucide-icon name="search" [size]="16"></lucide-icon>
+                  Buscar
                 </button>
               </div>
             </div>
@@ -289,11 +193,11 @@
               <div class="form-group">
                 <label>Status *</label>
                 <select formControlName="status">
-                  <option value="sourcing">🔍 Pesquisando</option>
-                  <option value="comprado">🟠 Aguardando Aprovação</option>
-                  <option value="em_transito">🟡 Pendente</option>
-                  <option value="no_estoque">✅ Aprovado/Vendendo</option>
-                  <option value="vendido">🟣 Vendido</option>
+                  <option value="sourcing">Pesquisando</option>
+                  <option value="comprado">Aguardando Aprovação</option>
+                  <option value="em_transito">Pendente</option>
+                  <option value="no_estoque">Aprovado/Vendendo</option>
+                  <option value="vendido">Vendido</option>
                 </select>
               </div>
               <div class="form-group">

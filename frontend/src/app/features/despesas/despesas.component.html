@@ -19,25 +19,37 @@
           </select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group full-width">
           <label>Descrição</label>
           <input type="text" formControlName="descricao" class="form-control"
                  placeholder="Ex: Facebook Ads Janeiro">
         </div>
 
         <div class="form-group">
-          <label>Valor *</label>
-          <input type="number" formControlName="valor" class="form-control"
-                 step="0.01" min="0" required>
+          <label>
+            <lucide-icon name="dollar-sign" [size]="16" style="vertical-align: middle;"></lucide-icon>
+            Valor USD
+          </label>
+          <input type="number" formControlName="valor_usd" class="form-control"
+                 step="0.01" placeholder="Deixe vazio se não aplicável">
         </div>
 
         <div class="form-group">
-          <label>Moeda *</label>
-          <select formControlName="moeda" class="form-control">
-            <option value="BRL">🇧🇷 Real (BRL)</option>
-            <option value="USD">🇺🇸 Dólar (USD)</option>
-            <option value="EUR">🇪🇺 Euro (EUR)</option>
-          </select>
+          <label>
+            <lucide-icon name="dollar-sign" [size]="16" style="vertical-align: middle;"></lucide-icon>
+            Valor BRL (R$)
+          </label>
+          <input type="number" formControlName="valor_brl" class="form-control"
+                 step="0.01" placeholder="Deixe vazio se não aplicável">
+        </div>
+
+        <div class="form-group">
+          <label>
+            <lucide-icon name="dollar-sign" [size]="16" style="vertical-align: middle;"></lucide-icon>
+            Valor EUR (€)
+          </label>
+          <input type="number" formControlName="valor_eur" class="form-control"
+                 step="0.01" placeholder="Deixe vazio se não aplicável">
         </div>
 
         <div class="form-group">
@@ -63,8 +75,14 @@
       </div>
 
       <button type="submit" class="btn btn-primary" [disabled]="loading || gastoForm.invalid">
-        <span *ngIf="!loading">➕ Adicionar Gasto</span>
-        <span *ngIf="loading">⏳ Salvando...</span>
+        <span *ngIf="!loading">
+          <lucide-icon name="plus" [size]="18"></lucide-icon>
+          Adicionar Gasto
+        </span>
+        <span *ngIf="loading">
+          <lucide-icon name="activity" [size]="18"></lucide-icon>
+          Salvando...
+        </span>
       </button>
     </form>
 
@@ -77,9 +95,9 @@
             <th>Data</th>
             <th>Categoria</th>
             <th>Descrição</th>
-            <th>Valor Original</th>
-            <th>Valor (BRL)</th>
-            <th>Valor (USD)</th>
+            <th>Valor USD</th>
+            <th>Valor BRL</th>
+            <th>Valor EUR</th>
             <th>Método</th>
             <th>Quem</th>
             <th>Ações</th>
@@ -92,17 +110,20 @@
             <td>{{ gasto.categoria }}</td>
             <td>{{ gasto.descricao || '-' }}</td>
             <td class="currency-cell">
-              <span class="currency-badge" [class]="'badge-' + gasto.moeda">
-                {{ formatCurrency(gasto.valor, gasto.moeda) }}
-              </span>
+              $ {{ gasto.valor_usd | number : '1.2-2' }}
             </td>
-            <td class="currency-cell">{{ formatCurrency(gasto.valor_brl, 'BRL') }}</td>
-            <td class="currency-cell">{{ formatCurrency(gasto.valor_usd, 'USD') }}</td>
+            <td class="currency-cell">
+              R$ {{ gasto.valor_brl | number : '1.2-2' }}
+            </td>
+            <td class="currency-cell">
+              € {{ gasto.valor_eur | number : '1.2-2' }}
+            </td>
             <td>{{ gasto.metodo }}</td>
             <td>{{ gasto.quem }}</td>
             <td>
               <button class="btn btn-danger btn-sm" (click)="deleteGasto(gasto.id)">
-                🗑️ Excluir
+                <lucide-icon name="trash-2" [size]="16"></lucide-icon>
+                Excluir
               </button>
             </td>
           </tr>
@@ -162,8 +183,14 @@
       </div>
 
       <button type="submit" class="btn btn-primary" [disabled]="loading || investimentoForm.invalid">
-        <span *ngIf="!loading">➕ Adicionar Investimento</span>
-        <span *ngIf="loading">⏳ Salvando...</span>
+        <span *ngIf="!loading">
+          <lucide-icon name="plus" [size]="18"></lucide-icon>
+          Adicionar Investimento
+        </span>
+        <span *ngIf="loading">
+          <lucide-icon name="activity" [size]="18"></lucide-icon>
+          Salvando...
+        </span>
       </button>
     </form>
 
@@ -191,7 +218,8 @@
             <td>{{ inv.quem }}</td>
             <td>
               <button class="btn btn-danger btn-sm" (click)="deleteInvestimento(inv.id)">
-                🗑️ Excluir
+                <lucide-icon name="trash-2" [size]="16"></lucide-icon>
+                Excluir
               </button>
             </td>
           </tr>
@@ -236,7 +264,8 @@
             <td class="text-center">{{ getMarginPct(p) }}</td>
             <td>
               <button class="btn btn-danger btn-sm" (click)="deleteProduto(p.id)">
-                🗑️ Excluir
+                <lucide-icon name="trash-2" [size]="16"></lucide-icon>
+                Excluir
               </button>
             </td>
           </tr>

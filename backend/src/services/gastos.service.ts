@@ -1,6 +1,5 @@
 import { query } from '../config/database';
 import { Gasto, CreateGastoDto, UpdateGastoDto } from '../models/gasto.model';
-import { currencyService } from './currency.service';
 
 export class GastosService {
   async findAll(month?: string): Promise<Gasto[]> {
@@ -24,21 +23,13 @@ export class GastosService {
   }
 
   async create(data: CreateGastoDto): Promise<Gasto> {
-    const moeda = data.moeda || 'BRL';
-    const valor = data.valor || 0;
-
-    // Converter para BRL e USD
-    const valor_brl = moeda === 'BRL' 
-      ? valor 
-      : await currencyService.convert(valor, moeda as any, 'BRL');
-
-    const valor_usd = moeda === 'USD'
-      ? valor
-      : await currencyService.convert(valor, moeda as any, 'USD');
+    const valor_usd = data.valor_usd || 0;
+    const valor_brl = data.valor_brl || 0;
+    const valor_eur = data.valor_eur || 0;
 
     const sql = `
-      INSERT INTO gastos (data, categoria, descricao, valor, moeda, valor_brl, valor_usd, metodo, conta, quem)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO gastos (data, categoria, descricao, valor_usd, valor_brl, valor_eur, metodo, conta, quem)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
 
@@ -46,10 +37,9 @@ export class GastosService {
       data.data,
       data.categoria,
       data.descricao || '',
-      valor,
-      moeda,
-      valor_brl,
       valor_usd,
+      valor_brl,
+      valor_eur,
       data.metodo || '',
       data.conta || '',
       data.quem || ''
@@ -63,37 +53,28 @@ export class GastosService {
     const existing = await this.findById(id);
     if (!existing) return null;
 
-    const moeda = data.moeda || existing.moeda;
-    const valor = data.valor !== undefined ? data.valor : existing.valor;
-
-    // Recalcular conversões se valor ou moeda mudou
-    const valor_brl = moeda === 'BRL'
-      ? valor
-      : await currencyService.convert(valor, moeda as any, 'BRL');
-
-    const valor_usd = moeda === 'USD'
-      ? valor
-      : await currencyService.convert(valor, moeda as any, 'USD');
+    const valor_usd = data.valor_usd !== undefined ? data.valor_usd : existing.valor_usd;
+    const valor_brl = data.valor_brl !== undefined ? data.valor_brl : existing.valor_brl;
+    const valor_eur = data.valor_eur !== undefined ? data.valor_eur : existing.valor_eur;
 
     const sql = `
       UPDATE gastos
-      SET data = $1, categoria = $2, descricao = $3, valor = $4, moeda = $5,
-          valor_brl = $6, valor_usd = $7, metodo = $8, conta = $9, quem = $10
-      WHERE id = $11
+      SET data = $1, categoria = $2, descricao = $3, valor_usd = $4, valor_brl = $5, valor_eur = $6,
+          metodo = $7, conta = $8, quem = $9
+      WHERE id = $10
       RETURNING *
     `;
 
     const params = [
-      data.data ?? existing.data,
-      data.categoria ?? existing.categoria,
-      data.descricao ?? existing.descricao,
-      valor,
-      moeda,
-      valor_brl,
+      data.data || existing.data,
+      data.categoria || existing.categoria,
+      data.descricao !== undefined ? data.descricao : existing.descricao,
       valor_usd,
-      data.metodo ?? existing.metodo,
-      data.conta ?? existing.conta,
-      data.quem ?? existing.quem,
+      valor_brl,
+      valor_eur,
+      data.metodo !== undefined ? data.metodo : existing.metodo,
+      data.conta !== undefined ? data.conta : existing.conta,
+      data.quem !== undefined ? data.quem : existing.quem,
       id
     ];
 
@@ -106,11 +87,16 @@ export class GastosService {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getTotalByMonth(month: string): Promise<{ total_brl: number; total_usd: number }> {
+  async getSummary(month: string): Promise<{
+    total_usd: number;
+    total_brl: number;
+    total_eur: number;
+  }> {
     const sql = `
-      SELECT 
+      SELECT
+        COALESCE(SUM(valor_usd), 0) as total_usd,
         COALESCE(SUM(valor_brl), 0) as total_brl,
-        COALESCE(SUM(valor_usd), 0) as total_usd
+        COALESCE(SUM(valor_eur), 0) as total_eur
       FROM gastos
       WHERE to_char(data, 'YYYY-MM') = $1
     `;
@@ -119,3 +105,5 @@ export class GastosService {
     return result.rows[0];
   }
 }
+
+export const gastosService = new GastosService();

@@ -1,22 +1,8 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  TemplateRef,
-  ViewChild,
-} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
 
 import { ProdutosService } from '../../core/services/produtos.service';
 import { CurrencyService } from '../../core/services/currency.service';
-import { WebsocketService } from '../../core/services/websocket.service';
-
-// Tipos que o seu Kanban Board expõe
-import {
-  KanbanColumn,
-  KanbanCardMoveEvent,
-} from '../../shared/components/kanban-board/kanban-board.component';
 
 // Modelos do app
 import {
@@ -24,21 +10,12 @@ import {
   ProdutoStatus,
 } from '../../core/models/produto.model';
 
-type ViewMode = 'kanban' | 'table';
-
 @Component({
   selector: 'app-produtos',
   templateUrl: './produtos.component.html',
   styleUrls: ['./produtos.component.scss'],
 })
-export class ProdutosComponent implements OnInit, OnDestroy {
-  @ViewChild('productCardTemplate', { static: true })
-  productCardTemplate!: TemplateRef<any>;
-
-  // Kanban
-  kanbanColumns: KanbanColumn[] = [];
-  viewMode: ViewMode = 'kanban';
-
+export class ProdutosComponent implements OnInit {
   // Tabela
   produtos: ProdutoWithMetrics[] = [];
 
@@ -57,37 +34,17 @@ export class ProdutosComponent implements OnInit, OnDestroy {
   // Loading
   loading = false;
 
-  // WS
-  private subs = new Subscription();
-
   constructor(
     private produtosService: ProdutosService,
     private currencyService: CurrencyService,
-    private fb: FormBuilder,
-    private ws: WebsocketService
+    private fb: FormBuilder
   ) {
     this.produtoForm = this.createForm();
   }
 
   ngOnInit(): void {
-    // abre WS (se você já abre no AppComponent, pode remover)
-    this.ws.connect();
-
-    // carrega dados conforme a view atual
-    this.reload();
+    this.loadTableData();
     this.loadFilters();
-
-    // auto-refresh quando alguém mover/alterar produto
-    this.subs.add(
-      this.ws.fromEvent('product:moved').subscribe(() => this.reload())
-    );
-    this.subs.add(
-      this.ws.fromEvent('kanban:refresh').subscribe(() => this.reload())
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subs.unsubscribe();
   }
 
   // ---------- Formulário ----------
@@ -142,26 +99,6 @@ export class ProdutosComponent implements OnInit, OnDestroy {
     };
   }
 
-  loadKanbanData(): void {
-    this.loading = true;
-    this.produtosService.getKanbanData().subscribe({
-      next: (data) => {
-        // mapeia para o formato do seu <app-kanban-board>
-        this.kanbanColumns = (data || []).map((col: any) => ({
-          id: col.status,
-          title: this.getStatusLabel(col.status),
-          items: col.produtos,
-          color: this.getStatusColor(col.status),
-        }));
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar Kanban:', err);
-        this.loading = false;
-      },
-    });
-  }
-
   loadTableData(): void {
     this.loading = true;
     this.produtosService.list(this.buildFilterParams() as any).subscribe({
@@ -192,29 +129,7 @@ export class ProdutosComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ---------- Eventos do Kanban ----------
-  onProductMoved(event: KanbanCardMoveEvent): void {
-    const produto = event.item as ProdutoWithMetrics;
-    const newStatus = event.currentColumnId as ProdutoStatus;
-
-    // update no backend
-    this.produtosService.updateStatus(produto.id!, newStatus).subscribe({
-      next: () => {
-        // otimista já moveu visualmente; notifica outros clientes
-        this.ws.emit('product:moved', {
-          productId: produto.id,
-          to: newStatus,
-          toIndex: event.currentIndex,
-        });
-      },
-      error: (err) => {
-        console.error('Erro ao atualizar status:', err);
-        // reverte se falhar
-        this.loadKanbanData();
-      },
-    });
-  }
-
+  // ---------- Eventos ----------
   onProductClicked(produto: ProdutoWithMetrics): void {
     this.editingId = produto.id!;
     this.produtoForm.patchValue({
@@ -250,8 +165,7 @@ export class ProdutosComponent implements OnInit, OnDestroy {
       this.produtosService.update(this.editingId, data).subscribe({
         next: () => {
           this.closeForm();
-          this.reload();
-          this.ws.emit('kanban:refresh', {}); // opcional: força refresh
+          this.loadTableData();
         },
         error: (err) => console.error('Erro ao atualizar:', err),
       });
@@ -259,8 +173,7 @@ export class ProdutosComponent implements OnInit, OnDestroy {
       this.produtosService.create(data).subscribe({
         next: () => {
           this.closeForm();
-          this.reload();
-          this.ws.emit('kanban:refresh', {});
+          this.loadTableData();
         },
         error: (err) => console.error('Erro ao criar:', err),
       });
@@ -271,8 +184,7 @@ export class ProdutosComponent implements OnInit, OnDestroy {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     this.produtosService.delete(id).subscribe({
       next: () => {
-        this.reload();
-        this.ws.emit('kanban:refresh', {});
+        this.loadTableData();
       },
       error: (err) => console.error('Erro ao deletar:', err),
     });
@@ -291,16 +203,6 @@ export class ProdutosComponent implements OnInit, OnDestroy {
   }
 
   // ---------- UI / Utils ----------
-  reload(): void {
-    if (this.viewMode === 'kanban') this.loadKanbanData();
-    else this.loadTableData();
-  }
-
-  switchView(mode: ViewMode): void {
-    this.viewMode = mode;
-    this.reload();
-  }
-
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       sourcing: '🔍 Pesquisando',

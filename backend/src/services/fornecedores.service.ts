@@ -1,4 +1,4 @@
-import pool from '../database/database';
+import { pool } from '../config/database';
 import { Fornecedor } from '../models/fornecedor.model';
 
 export class FornecedoresService {
