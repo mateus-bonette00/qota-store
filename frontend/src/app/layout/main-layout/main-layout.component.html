@@ -1,5 +1,8 @@
 <div class="main-layout">
-  <app-header (monthYearChange)="onMonthYearChange($event)"></app-header>
+  <app-header></app-header>
+
+  <!-- Seletor de mês/ano centralizado -->
+  <app-period-selector></app-period-selector>
 
   <main class="main-content">
     <ng-content></ng-content>

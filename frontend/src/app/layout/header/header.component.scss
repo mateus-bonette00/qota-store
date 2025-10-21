@@ -1,185 +1,145 @@
-.modern-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.app-header {
   position: sticky;
   top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
+  z-index: 50;
+
+  /* faixa com gradiente e leve vidro */
+  background: linear-gradient(120deg, var(--header-grad-a), var(--header-grad-b) 45%, var(--header-grad-c) 120%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* brilho suave por cima */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(1200px 60px at 50% -20px, rgba(255,255,255,0.12), transparent 60%);
+    pointer-events: none;
+  }
 }
 
 .header-container {
-  max-width: 1400px;
+  max-width: 105rem; /* 1680px */
   margin: 0 auto;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-// Brand/Logo
-.brand {
-  display: flex;
+  padding: 0.75rem 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 1rem;
+}
+
+.brand {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: var(--text-strong);
 
   .logo {
-    height: 45px;
+    height: 155px;   /* pedido do usuário */
     width: auto;
     object-fit: contain;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.45));
   }
 
   .brand-text {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    letter-spacing: -0.5px;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+
+    .title {
+      font-family: 'Sora', 'Inter', system-ui, sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 2.4vw, 2.4rem); /* maior */
+      letter-spacing: 0.2px;
+      background: linear-gradient(90deg, #ffffff 0%, var(--header-accent) 40%, var(--header-accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      margin-top: 2px;
+      font-weight: 600;
+      font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+      color: var(--text-dim);
+      letter-spacing: 0.3px;
+    }
   }
 }
 
-// Navigation Menu
-.nav-menu {
+.nav {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  flex: 1;
-  flex-wrap: wrap;
+  backdrop-filter: blur(4px);
 
   .nav-item {
-    display: flex;
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.65rem 0.9rem;
     border-radius: 12px;
-    color: white;
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem; /* texto maior */
+    line-height: 1;
+    color: #e6e9f2;
     text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(10px);
-
-    lucide-icon {
-      opacity: 0.9;
-    }
+    opacity: 0.95;
+    transition: transform .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.10);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
 
     &.active {
-      background: white;
-      color: #667eea;
-      border-color: white;
-      font-weight: 600;
-      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
-
-      lucide-icon {
-        opacity: 1;
-      }
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.30), inset 0 0 0 1px rgba(255,255,255,0.12);
     }
   }
 }
 
-// Filters
-.header-filters {
-  display: flex;
-  gap: 0.75rem;
-  margin-left: auto;
-
-  .filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-
-    lucide-icon {
-      color: white;
-      opacity: 0.9;
-    }
-
-    .filter-select {
-      background: transparent;
-      border: none;
-      color: white;
-      font-weight: 500;
-      font-size: 0.9rem;
-      cursor: pointer;
-      outline: none;
-      padding: 0.25rem;
-
-      option {
-        background: #667eea;
-        color: white;
-      }
-
-      &:hover {
-        opacity: 0.9;
-      }
-    }
-  }
+/* Responsivo: reduz logo e reflow do menu em telas menores */
+@media (max-width: 1200px) {
+  .brand .logo { height: 120px; }
+  .nav .nav-item { font-size: 1rem; padding: 0.6rem 0.8rem; }
 }
 
-// Responsive
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .header-container {
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
-
-  .nav-menu {
-    order: 3;
-    width: 100%;
-  }
-
-  .header-filters {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-container {
-    padding: 1rem;
-  }
-
   .brand {
-    .logo {
-      height: 35px;
-    }
-
-    .brand-text {
-      font-size: 1.25rem;
-    }
-  }
-
-  .nav-menu {
-    .nav-item {
-      font-size: 0.85rem;
-      padding: 0.5rem 0.75rem;
-
-      span {
-        display: none;
-      }
-
-      lucide-icon {
-        margin: 0;
-      }
-    }
-  }
-
-  .header-filters {
-    width: 100%;
     justify-content: center;
-
-    .filter-group {
-      flex: 1;
-      justify-content: center;
-    }
+    text-align: center;
   }
+  .nav {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .brand .logo { height: 96px; } /* mantém usável no mobile */
+}
+
+/* ====== Títulos com gradiente igual ao logo ====== */
+.text-gradient-brand{
+  background: linear-gradient(90deg, #ffffff 0%, #60a5fa 45%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.section-title{
+  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.15;
+  font-size: clamp(1.6rem, 2.3vw, 2.2rem);
+  margin: 1.25rem 0 .5rem;
 }

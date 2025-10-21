@@ -16,12 +16,14 @@ import { NgChartsModule } from 'ng2-charts';
 // >>> importe o módulo de features
 import { FeaturesModule } from './features/features.module';
 import { SharedModule } from './shared/shared.module';
+import { PeriodSelectorComponent } from './shared/components/period-selector/period-selector.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
-    MainLayoutComponent
+    MainLayoutComponent,
+    PeriodSelectorComponent
     // ❌ Removidos: DashboardComponent, ReceitasComponent, DespesasComponent, ProdutosComponent, GraficosComponent
   ],
   imports: [

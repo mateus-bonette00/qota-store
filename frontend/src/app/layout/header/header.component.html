@@ -1,54 +1,22 @@
-<header class="modern-header">
+<header class="app-header">
   <div class="header-container">
-    <!-- Logo & Brand -->
-    <div class="brand">
-      <img src="assets/logo-qota-storee-semfundo.png" alt="Qota Store" class="logo" />
-      <span class="brand-text">Qota Finance</span>
-    </div>
+    <a class="brand" routerLink="/dashboard" aria-label="Qota Finance">
+      <img class="logo" src="assets/logo-qota-storee-semfundo.png" alt="Qota" />
+      <div class="brand-text">
+        <span class="title">Qota Finance</span>
+        <span class="subtitle">Dashboard Operacional</span>
+      </div>
+    </a>
 
-    <!-- Navigation -->
-    <nav class="nav-menu">
-      <a
-        *ngFor="let item of navItems"
-        [routerLink]="item.route"
-        routerLinkActive="active"
-        class="nav-item">
-        <lucide-icon [name]="item.icon" [size]="20"></lucide-icon>
-        <span>{{ item.label }}</span>
-      </a>
+    <nav class="nav">
+      <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">Principal</a>
+      <a class="nav-item" routerLink="/receitas"  routerLinkActive="active">Receitas</a>
+      <a class="nav-item" routerLink="/graficos"  routerLinkActive="active">Gráficos</a>
+      <a class="nav-item" routerLink="/despesas"  routerLinkActive="active">Despesas</a>
+      <a class="nav-item" routerLink="/produtos"  routerLinkActive="active">Produtos</a>
+      <a class="nav-item" routerLink="/senhas"    routerLinkActive="active">Senhas</a>
+      <a class="nav-item" routerLink="/senhas-fornecedores" routerLinkActive="active">Senhas Fornec.</a>
+      <a class="nav-item" routerLink="/informacoes-empresa" routerLinkActive="active">Info Empresa</a>
     </nav>
-
-    <!-- Month/Year Filters -->
-    <div class="header-filters">
-      <div class="filter-group">
-        <lucide-icon name="calendar" [size]="18"></lucide-icon>
-        <select
-          [(ngModel)]="selectedMonth"
-          (change)="onMonthChange()"
-          class="filter-select">
-          <option value="01">Janeiro</option>
-          <option value="02">Fevereiro</option>
-          <option value="03">Março</option>
-          <option value="04">Abril</option>
-          <option value="05">Maio</option>
-          <option value="06">Junho</option>
-          <option value="07">Julho</option>
-          <option value="08">Agosto</option>
-          <option value="09">Setembro</option>
-          <option value="10">Outubro</option>
-          <option value="11">Novembro</option>
-          <option value="12">Dezembro</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <select
-          [(ngModel)]="selectedYear"
-          (change)="onYearChange()"
-          class="filter-select">
-          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-        </select>
-      </div>
-    </div>
   </div>
 </header>

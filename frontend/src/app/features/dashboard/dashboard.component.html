@@ -51,7 +51,7 @@
   </div>
 
   <!-- Resumo do Mês -->
-  <h3 class="section-title">
+  <h3 class="section-title text-gradient-brand">
     Resumo do Mês — {{ getMonthLabel(currentMonth) }}
   </h3>
 
@@ -64,8 +64,8 @@
         </div>
         <div>
           <div class="kpi-label">Receitas (mês)</div>
-          <div class="kpi-value-usd green">USD: {{ formatUSD(resumoMes?.recUSD) }}</div>
-          <div class="kpi-value-brl green">BRL: {{ formatBRL(resumoMes?.recBRL) }}</div>
+          <div class="kpi-value-usd green">USD: {{ formatUSD(resumoMes.recUSD) }}</div>
+          <div class="kpi-value-brl green">BRL: {{ formatBRL(resumoMes.recBRL) }}</div>
         </div>
       </div>
     </div>
@@ -78,8 +78,8 @@
         </div>
         <div>
           <div class="kpi-label">Despesas (mês)</div>
-          <div class="kpi-value-usd red">USD: {{ formatUSD(resumoMes?.despUSD) }}</div>
-          <div class="kpi-value-brl red">BRL: {{ formatBRL(resumoMes?.despBRL) }}</div>
+          <div class="kpi-value-usd red">USD: {{ formatUSD(resumoMes.despUSD) }}</div>
+          <div class="kpi-value-brl red">BRL: {{ formatBRL(resumoMes.despBRL) }}</div>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@
   <hr class="divider">
 
   <!-- Totais Acumulados -->
-  <h3 class="section-title">
+  <h3 class="section-title text-gradient-brand">
     Valor Total — Somas de Todos os Meses
   </h3>
 
@@ -118,8 +118,8 @@
         </div>
         <div>
           <div class="kpi-label">Receitas (total)</div>
-          <div class="kpi-value-usd green">USD: {{ formatUSD(totais?.recUSD) }}</div>
-          <div class="kpi-value-brl green">BRL: {{ formatBRL(totais?.recBRL) }}</div>
+          <div class="kpi-value-usd green">USD: {{ formatUSD(totais.recUSD) }}</div>
+          <div class="kpi-value-brl green">BRL: {{ formatBRL(totais.recBRL) }}</div>
         </div>
       </div>
     </div>
@@ -131,8 +131,8 @@
         </div>
         <div>
           <div class="kpi-label">Despesas (total)</div>
-          <div class="kpi-value-usd red">USD: {{ formatUSD(totais?.despUSD) }}</div>
-          <div class="kpi-value-brl red">BRL: {{ formatBRL(totais?.despBRL) }}</div>
+          <div class="kpi-value-usd red">USD: {{ formatUSD(totais.despUSD) }}</div>
+          <div class="kpi-value-brl red">BRL: {{ formatBRL(totais.despBRL) }}</div>
         </div>
       </div>
     </div>
@@ -158,7 +158,7 @@
   <hr class="divider">
 
   <!-- Lucros -->
-  <h3 class="section-title">Lucros</h3>
+  <h3 class="section-title text-gradient-brand">Lucros</h3>
 
   <div class="lucros-grid">
     <div class="lucro-card">
@@ -170,7 +170,7 @@
           Lucro realizado no período — {{ getMonthLabel(currentMonth) }}
         </div>
         <div class="lucro-value">
-          {{ formatUSD(lucros?.lucroPeriodo) }}
+          {{ formatUSD(lucros.lucroPeriodo) }}
         </div>
       </div>
     </div>
@@ -184,7 +184,7 @@
           Lucro TOTAL — soma de todos os meses
         </div>
         <div class="lucro-value">
-          {{ formatUSD(lucros?.lucroTotal) }}
+          {{ formatUSD(lucros.lucroTotal) }}
         </div>
       </div>
     </div>

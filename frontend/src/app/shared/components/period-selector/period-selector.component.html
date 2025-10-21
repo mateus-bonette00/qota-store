@@ -1,0 +1,20 @@
+<section class="period-wrap">
+  <div class="period-card">
+    <div class="period-title">Período</div>
+    <div class="period-controls">
+      <label class="field">
+        <span>Mês</span>
+        <select [(ngModel)]="selectedMonth" (change)="onChange()">
+          <option *ngFor="let m of months" [value]="m.v">{{ m.n }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Ano</span>
+        <select [(ngModel)]="selectedYear" (change)="onChange()">
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+      </label>
+    </div>
+  </div>
+</section>

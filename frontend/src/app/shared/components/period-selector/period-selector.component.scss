@@ -1,0 +1,57 @@
+.period-wrap {
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+}
+
+.period-card {
+  width: min(1100px, 92vw);
+  margin: 1rem auto 0.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+}
+
+.period-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  margin-bottom: .75rem;
+  text-align: center;
+}
+
+.period-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  min-width: 220px;
+
+  span {
+    font-weight: 700;
+    opacity: .9;
+  }
+
+  select {
+    font-size: 1.125rem;
+    font-weight: 700;
+    padding: .9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(10, 12, 24, 0.75);
+    color: #fff;
+    outline: none;
+  }
+
+  select:focus {
+    border-color: rgba(255,255,255,0.4);
+  }
+}

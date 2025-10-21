@@ -11,10 +11,11 @@ $gray-400: #9ca3af;
 }
 
 .main-content {
-  max-width: 80rem;     /* max-w-7xl */
-  margin-left: auto;    /* mx-auto */
+  /* antes: max-width: 80rem;        // 1280px aprox. */
+  max-width: 96rem;                  /* 1536px */
+  margin-left: auto;
   margin-right: auto;
-  padding: 2rem 1.5rem; /* py-8 px-6 */
+  padding: 2rem 1.5rem;
 }
 
 .main-footer {

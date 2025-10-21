@@ -1,8 +1,16 @@
 /* Modern Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* CSS Reset & Variables */
 :root {
+  --header-grad-a: #0b1020;
+  --header-grad-b: #1b2b4a;
+  --header-grad-c: #4c1d95; /* roxo */
+  --header-accent: #60a5fa; /* azul claro */
+  --header-accent-2: #a78bfa; /* roxo claro */
+  --text-strong: #e5e7eb;
+  --text-dim: #cbd5e1;
   --primary: #667eea;
   --primary-dark: #5568d3;
   --secondary: #764ba2;
@@ -479,4 +487,21 @@ tbody {
       padding: 0.75rem 0.5rem;
     }
   }
+}
+
+/* ====== Títulos com gradiente igual ao logo ====== */
+.text-gradient-brand{
+  background: linear-gradient(90deg, #ffffff 0%, #60a5fa 45%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.section-title{
+  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.15;
+  font-size: clamp(1.6rem, 2.3vw, 2.2rem);
+  margin: 1.25rem 0 .5rem;
 }
