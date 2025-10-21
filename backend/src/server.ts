@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 8000;
 
 async function startServer() {
   try {
-    // Executar migrations primeiro
-    await runMigrations();
+    // Executar migrations primeiro (desabilitado - rode manualmente com: npm run migrate)
+    // await runMigrations();
 
     // Criar servidor HTTP
     const httpServer = createServer(app);
