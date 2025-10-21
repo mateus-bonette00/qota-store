@@ -7,7 +7,8 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "migrate": "psql -d qota_finance -f src/database/migrations/001_create_tables.sql"
+    "migrate": "node run-migrations.js",
+    "postinstall": "npm run build"
   },
   "keywords": [
     "finance",
