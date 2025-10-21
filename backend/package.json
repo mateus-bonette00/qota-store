@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy-sql",
+    "copy-sql": "mkdir -p dist/database/migrations && cp -r src/database/migrations/*.sql dist/database/migrations/",
     "start": "node dist/server.js",
     "migrate": "node run-migrations.js",
     "postinstall": "npm run build"
