@@ -225,12 +225,55 @@ export class ProdutosComponent implements OnInit {
     return colors[status] ?? '#ccc';
   }
 
-  calcularMargemEstimada(): number {
+  // ---------- Cálculos de Margem ----------
+
+  /**
+   * Calcula o custo total por unidade incluindo frete
+   * Fórmula: custo_base + (freight / quantidade)
+   */
+  calcularCustoTotalUnitario(): number {
     const v = this.produtoForm.value;
-    const custoTotal =
-      (+v.custo_base || 0) + (+v.freight || 0) + (+v.tax || 0) + (+v.prep || 0);
-    const lucro = (+v.sold_for || 0) - (+v.amazon_fees || 0) - custoTotal;
-    return (+v.sold_for || 0) > 0 ? (lucro / +v.sold_for) * 100 : 0;
+    const custoBase = +v.custo_base || 0;
+    const freight = +v.freight || 0;
+    const quantidade = +v.quantidade || 1; // evitar divisão por zero
+
+    return custoBase + (freight / quantidade);
+  }
+
+  /**
+   * Calcula o Gross Profit (lucro bruto)
+   * Fórmula: sold_for - amazon_fees - prep - custo_base
+   */
+  calcularGrossProfit(): number {
+    const v = this.produtoForm.value;
+    const soldFor = +v.sold_for || 0;
+    const amazonFees = +v.amazon_fees || 0;
+    const prep = +v.prep || 0;
+    const custoBase = +v.custo_base || 0;
+
+    return soldFor - amazonFees - prep - custoBase;
+  }
+
+  /**
+   * Calcula o Gross ROI (retorno sobre investimento)
+   * Fórmula: (Gross Profit / custo_base) × 100
+   */
+  calcularGrossROI(): number {
+    const grossProfit = this.calcularGrossProfit();
+    const custoBase = +this.produtoForm.value.custo_base || 0;
+
+    return custoBase > 0 ? (grossProfit / custoBase) * 100 : 0;
+  }
+
+  /**
+   * Calcula a Margem de Lucro (%)
+   * Fórmula: (Gross Profit / sold_for) × 100
+   */
+  calcularMargemEstimada(): number {
+    const grossProfit = this.calcularGrossProfit();
+    const soldFor = +this.produtoForm.value.sold_for || 0;
+
+    return soldFor > 0 ? (grossProfit / soldFor) * 100 : 0;
   }
 
   autoCalcularAmazonFees(): void {

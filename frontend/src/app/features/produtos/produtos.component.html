@@ -218,11 +218,11 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Custo Base (por unidade)</label>
-                <input type="number" step="0.01" formControlName="custo_base" />
+                <input type="number" step="0.01" formControlName="custo_base" placeholder="Ex: 9.94" />
               </div>
               <div class="form-group">
-                <label>Frete (por unidade)</label>
-                <input type="number" step="0.01" formControlName="freight" />
+                <label>Frete Total (dividido por quantidade)</label>
+                <input type="number" step="0.01" formControlName="freight" placeholder="Ex: 19.40" />
               </div>
             </div>
 
@@ -257,19 +257,42 @@
               </div>
             </div>
 
-            <div class="margem-preview">
-              <strong>Margem Estimada:</strong>
-              <span
-                class="margem-value"
-                [class.high]="calcularMargemEstimada() > 40"
-                [class.medium]="
-                  calcularMargemEstimada() >= 20 &&
-                  calcularMargemEstimada() <= 40
-                "
-                [class.low]="calcularMargemEstimada() < 20"
-              >
-                {{ calcularMargemEstimada() | number : "1.2-2" }}%
-              </span>
+            <!-- Resumo Financeiro -->
+            <div class="financial-summary">
+              <h3 style="margin-bottom: 12px;">📊 Resumo Financeiro</h3>
+
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <span class="summary-label">Custo Total/Unidade:</span>
+                  <span class="summary-value">${{ calcularCustoTotalUnitario() | number : "1.2-2" }}</span>
+                </div>
+
+                <div class="summary-item">
+                  <span class="summary-label">Gross Profit:</span>
+                  <span class="summary-value" [class.positive]="calcularGrossProfit() > 0" [class.negative]="calcularGrossProfit() < 0">
+                    ${{ calcularGrossProfit() | number : "1.2-2" }}
+                  </span>
+                </div>
+
+                <div class="summary-item">
+                  <span class="summary-label">Gross ROI:</span>
+                  <span class="summary-value" [class.positive]="calcularGrossROI() > 0">
+                    {{ calcularGrossROI() | number : "1.2-2" }}%
+                  </span>
+                </div>
+
+                <div class="summary-item highlight">
+                  <span class="summary-label"><strong>Margem:</strong></span>
+                  <span
+                    class="summary-value-big"
+                    [class.high]="calcularMargemEstimada() > 40"
+                    [class.medium]="calcularMargemEstimada() >= 20 && calcularMargemEstimada() <= 40"
+                    [class.low]="calcularMargemEstimada() < 20"
+                  >
+                    {{ calcularMargemEstimada() | number : "1.2-2" }}%
+                  </span>
+                </div>
+              </div>
             </div>
 
             <h3>Estoque e Datas</h3>
