@@ -21,6 +21,7 @@ export class AmazonSyncJob {
       console.log('[Amazon Sync] Iniciando sincronização...', new Date().toISOString());
 
       try {
+        await this.syncInventory();
         await this.syncOrders();
         await this.syncBalance();
       } catch (error) {
@@ -32,6 +33,59 @@ export class AmazonSyncJob {
     });
 
     console.log('[Amazon Sync Job] Agendado para rodar a cada 4 horas');
+  }
+
+  /**
+   * Sincronizar inventário FBA
+   */
+  private async syncInventory(): Promise<{ criados: number; atualizados: number }> {
+    try {
+      const inventory = await amazonService.getFBAInventory();
+      let criados = 0;
+      let atualizados = 0;
+
+      for (const item of inventory) {
+        const sku = item.sellerSKU;
+        const asin = item.asin;
+        const productName = item.productName || 'Produto sem nome';
+        const totalQuantity = item.totalQuantity || 0;
+
+        // Verificar se o produto já existe
+        const existingProduct = await query(
+          `SELECT * FROM produtos WHERE sku = $1 OR asin = $2 LIMIT 1`,
+          [sku, asin]
+        );
+
+        if (existingProduct.rows.length > 0) {
+          // Atualizar estoque
+          await query(
+            `UPDATE produtos
+             SET estoque = $1,
+                 asin = COALESCE(asin, $2),
+                 updated_at = NOW()
+             WHERE id = $3`,
+            [totalQuantity, asin, existingProduct.rows[0].id]
+          );
+          atualizados++;
+        } else {
+          // Criar novo produto
+          await query(
+            `INSERT INTO produtos
+               (data_add, nome, sku, asin, estoque, quantidade)
+             VALUES (NOW(), $1, $2, $3, $4, $5)`,
+            [productName, sku, asin, totalQuantity, totalQuantity]
+          );
+          criados++;
+        }
+      }
+
+      await this.logSync('inventory', 'success', criados, atualizados);
+      console.log(`[Amazon Sync] Inventário sincronizado: ${criados} novos, ${atualizados} atualizados`);
+      return { criados, atualizados };
+    } catch (error) {
+      console.error('[Amazon Sync] Erro ao sincronizar inventário:', error);
+      throw error;
+    }
   }
 
   /**
@@ -167,6 +221,7 @@ export class AmazonSyncJob {
 
     this.isRunning = true;
     try {
+      await this.syncInventory();
       await this.syncOrders();
       await this.syncBalance();
       return { success: true };

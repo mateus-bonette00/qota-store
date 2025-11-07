@@ -172,6 +172,64 @@ export class AmazonSPAPIService {
       return [];
     }
   }
+
+  /**
+   * Buscar Inventário FBA (Fulfillment Inventory)
+   * Retorna lista de produtos no inventário da Amazon
+   */
+  async getFBAInventory(): Promise<any[]> {
+    try {
+      const token = await this.getAccessToken();
+      const endpoint = REGION_ENDPOINT[this.credentials.region];
+      const path = '/fba/inventory/v1/summaries';
+
+      const response = await axios.get(`${endpoint}${path}`, {
+        headers: {
+          'x-amz-access-token': token,
+          'Content-Type': 'application/json',
+        },
+        params: {
+          granularityType: 'Marketplace',
+          granularityId: 'ATVPDKIKX0DER', // US marketplace
+          marketplaceIds: 'ATVPDKIKX0DER',
+        },
+      });
+
+      return response.data?.payload?.inventorySummaries ?? [];
+    } catch (error: any) {
+      console.error('Erro ao buscar inventário FBA:', error?.response?.data || error?.message || error);
+      return [];
+    }
+  }
+
+  /**
+   * Buscar detalhes de um produto pelo SKU
+   */
+  async getProductBySKU(sku: string): Promise<any | null> {
+    try {
+      const token = await this.getAccessToken();
+      const endpoint = REGION_ENDPOINT[this.credentials.region];
+      const path = '/catalog/2022-04-01/items';
+
+      const response = await axios.get(`${endpoint}${path}`, {
+        headers: {
+          'x-amz-access-token': token,
+          'Content-Type': 'application/json',
+        },
+        params: {
+          marketplaceIds: 'ATVPDKIKX0DER',
+          identifiers: sku,
+          identifiersType: 'SKU',
+        },
+      });
+
+      const items = response.data?.items ?? [];
+      return items.length > 0 ? items[0] : null;
+    } catch (error: any) {
+      console.error(`Erro ao buscar produto SKU ${sku}:`, error?.response?.data || error?.message || error);
+      return null;
+    }
+  }
 }
 
 // Singleton

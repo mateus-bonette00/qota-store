@@ -8,6 +8,8 @@ router.get('/saldos/latest', amazonController.getLatestSaldo);
 
 // Sincronização
 router.post('/sync/orders', amazonController.syncOrders);
+router.post('/sync/inventory', amazonController.syncInventory);
+router.post('/sync/full', amazonController.syncFull);
 
 // Teste de conexão
 router.get('/test-connection', amazonController.testConnection);

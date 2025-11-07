@@ -130,6 +130,172 @@ export class AmazonController {
       return;
     }
   }
+
+  /**
+   * POST /api/amazon/sync/inventory
+   * Sincroniza produtos do inventário FBA da Amazon
+   */
+  async syncInventory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log('🔄 Iniciando sincronização de inventário FBA...');
+
+      const inventory = await amazonService.getFBAInventory();
+      console.log(`📦 Encontrados ${inventory.length} produtos no inventário FBA`);
+
+      let created = 0;
+      let updated = 0;
+
+      for (const item of inventory) {
+        const sku = item.sellerSKU;
+        const asin = item.asin;
+        const productName = item.productName || 'Produto sem nome';
+        const totalQuantity = item.totalQuantity || 0;
+
+        // Verificar se o produto já existe
+        const existingProduct = await query(
+          `SELECT * FROM produtos WHERE sku = $1 OR asin = $2 LIMIT 1`,
+          [sku, asin]
+        );
+
+        if (existingProduct.rows.length > 0) {
+          // Atualizar estoque
+          await query(
+            `UPDATE produtos
+             SET estoque = $1,
+                 asin = COALESCE(asin, $2),
+                 updated_at = NOW()
+             WHERE id = $3`,
+            [totalQuantity, asin, existingProduct.rows[0].id]
+          );
+          updated++;
+          console.log(`✅ Atualizado: ${sku} - Estoque: ${totalQuantity}`);
+        } else {
+          // Criar novo produto
+          await query(
+            `INSERT INTO produtos
+               (data_add, nome, sku, asin, estoque, quantidade)
+             VALUES (NOW(), $1, $2, $3, $4, $5)`,
+            [productName, sku, asin, totalQuantity, totalQuantity]
+          );
+          created++;
+          console.log(`➕ Criado: ${sku} - ${productName}`);
+        }
+      }
+
+      console.log(`✅ Sincronização concluída: ${created} criados, ${updated} atualizados`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Inventário sincronizado com sucesso',
+        summary: {
+          total: inventory.length,
+          created,
+          updated,
+        },
+      });
+      return;
+    } catch (error) {
+      console.error('❌ Erro ao sincronizar inventário:', error);
+      next(error);
+      return;
+    }
+  }
+
+  /**
+   * POST /api/amazon/sync/full
+   * Sincronização completa: inventário + vendas
+   */
+  async syncFull(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log('🔄 Iniciando sincronização completa...');
+
+      // 1. Sincronizar inventário
+      const inventory = await amazonService.getFBAInventory();
+      let productsUpdated = 0;
+
+      for (const item of inventory) {
+        const sku = item.sellerSKU;
+        const asin = item.asin;
+        const productName = item.productName || 'Produto sem nome';
+        const totalQuantity = item.totalQuantity || 0;
+
+        const existingProduct = await query(
+          `SELECT * FROM produtos WHERE sku = $1 OR asin = $2 LIMIT 1`,
+          [sku, asin]
+        );
+
+        if (existingProduct.rows.length > 0) {
+          await query(
+            `UPDATE produtos
+             SET estoque = $1, asin = COALESCE(asin, $2), updated_at = NOW()
+             WHERE id = $3`,
+            [totalQuantity, asin, existingProduct.rows[0].id]
+          );
+        } else {
+          await query(
+            `INSERT INTO produtos
+               (data_add, nome, sku, asin, estoque, quantidade)
+             VALUES (NOW(), $1, $2, $3, $4, $5)`,
+            [productName, sku, asin, totalQuantity, totalQuantity]
+          );
+        }
+        productsUpdated++;
+      }
+
+      // 2. Sincronizar vendas (últimos 7 dias)
+      const orders = await amazonService.getRecentOrders(7);
+      let salesSynced = 0;
+
+      for (const order of orders) {
+        const items = await amazonService.getOrderItems(order.AmazonOrderId);
+
+        for (const item of items) {
+          // Salvar venda
+          await query(
+            `INSERT INTO amazon_receitas
+               (data, quantidade, valor_usd, obs, sku, produto)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             ON CONFLICT DO NOTHING`,
+            [
+              order.PurchaseDate,
+              item.QuantityOrdered,
+              Number(item.ItemPrice?.Amount || 0),
+              `Order: ${order.AmazonOrderId}`,
+              item.SellerSKU,
+              item.Title,
+            ]
+          );
+
+          // Atualizar estoque do produto
+          await query(
+            `UPDATE produtos
+             SET estoque = GREATEST(0, estoque - $1)
+             WHERE sku = $2`,
+            [item.QuantityOrdered, item.SellerSKU]
+          );
+
+          salesSynced++;
+        }
+      }
+
+      console.log(`✅ Sincronização completa: ${productsUpdated} produtos, ${salesSynced} vendas`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Sincronização completa realizada',
+        summary: {
+          productsUpdated,
+          ordersProcessed: orders.length,
+          salesSynced,
+        },
+      });
+      return;
+    } catch (error) {
+      console.error('❌ Erro na sincronização completa:', error);
+      next(error);
+      return;
+    }
+  }
 }
 
 export const amazonController = new AmazonController();
